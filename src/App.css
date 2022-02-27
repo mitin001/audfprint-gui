@@ -1,0 +1,61 @@
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 160px 3fr;
+  height: 100%;
+  max-width: 100%;
+}
+
+.layout-nav {
+  background-color: #FFFDFA;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.layout-link {
+  background-color: #FFFDFA;
+  color: rgba(0, 0, 0, 0.55);
+  padding: 10px;
+  text-decoration: none;
+  max-width: 100%;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.layout-link span {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.layout-link svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 1rem 0 0;
+}
+
+.layout-link:hover {
+  background-color: #fbf8f4;
+}
+
+.layout-main {
+  background-color: #FFFFFF;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1), 0 0 0.5px 0 rgba(0, 0, 0, 0.05);
+}
+
+.layout-main > .ui.container {
+  margin: 1em;
+}

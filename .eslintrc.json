@@ -1,0 +1,42 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "jest/globals": true
+  },
+  "extends": [
+    "plugin:react/recommended",
+    "plugin:jest/all",
+    "airbnb"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "ignorePatterns": [
+    "build/*",
+    "dist/*"
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "parser": "babel-eslint",
+  "plugins": [
+    "react",
+    "jest"
+  ],
+  "rules": {
+    "max-len": ["error", { "code": 150 }],
+    "react/jsx-filename-extension": ["error", { "extensions": [".js", ".jsx"] }],
+    "linebreak-style": 0,
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
+    "jest/no-large-snapshots": ["warn", { "maxSize": 500, "inlineMaxSize": 500 }],
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}],
+    "react/forbid-prop-types": 0
+  }
+}

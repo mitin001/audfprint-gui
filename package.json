@@ -1,0 +1,113 @@
+{
+  "name": "audfprint-gui",
+  "author": "mitin001",
+  "description": "GUI for audfprint",
+  "version": "0.0.0",
+  "dependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "@wojtekmaj/react-timerange-picker": "^3.1.0",
+    "about-window": "^1.14.0",
+    "axios": "^0.21.1",
+    "bufferutil": "^4.0.3",
+    "date-fns": "^2.14.0",
+    "dotenv": "^8.2.0",
+    "electron-log": "^4.3.4",
+    "electron-updater": "^4.3.8",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.2.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.22.0",
+    "lodash": "^4.17.20",
+    "moment": "^2.27.0",
+    "node-sass": "^4.14.1",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-date-range": "^1.0.3",
+    "react-dom": "^16.13.1",
+    "react-icons": "^3.10.0",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "4.0.3",
+    "react-simple-timefield": "^3.0.0",
+    "react-test-renderer": "^16.13.1",
+    "react-time-picker": "^4.3.0",
+    "react-tooltip": "^4.2.6",
+    "recharts": "^1.8.5",
+    "sass": "^1.32.8",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^0.88.2",
+    "ts-node": "^9.1.1",
+    "type-fest": "^0.13.1",
+    "typescript": "^4.1.3",
+    "utf-8-validate": "^5.0.4",
+    "webpack-hot-middleware": "^2.25.0",
+    "webpack-plugin-serve": "^1.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "start_local": "ESLINT_NO_DEV_ERRORS=true npm start",
+    "build": "react-scripts build && cp -r electron build/electron",
+    "test": "react-scripts test",
+    "lint": "./node_modules/.bin/eslint . --fix",
+    "prettier": "prettier --config .prettierrc.json --write 'src/**/*{css,js,jsx,json}'",
+    "start-electron": "electron .",
+    "package-electron-mac": "electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
+    "package-electron-win": "electron-builder build --win -c.extraMetadata.main=build/electron/main.js --publish always"
+  },
+  "main": "electron/main.js",
+  "build": {
+    "appId": "github.com/mitin001/audfprint-gui",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "artifactName": "${productName}.setup.${version}.${ext}",
+      "uninstallDisplayName": "audfprint-gui"
+    },
+    "productName": "audfprint-gui",
+    "publish": {
+      "owner": "mitin001",
+      "provider": "github",
+      "repo": "audfprint-gui"
+    },
+    "win": {
+      "icon": "build/icon.png"
+    }
+  },
+  "homepage": "./",
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "babel-eslint": "^10.1.0",
+    "electron": "^11.4.4",
+    "electron-builder": "^22.10.5",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "path-browserify": "^1.0.1",
+    "prettier": "2.0.5",
+    "serve": "^11.3.2"
+  }
+}
