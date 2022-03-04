@@ -6,6 +6,7 @@ const { autoUpdater } = require('electron-updater');
 const { join } = require('path');
 const { existsSync } = require('fs');
 const log = require('electron-log');
+const glob = require('glob');
 const openAboutWindow = require('about-window').default;
 require('dotenv').config();
 
@@ -113,8 +114,11 @@ ipcMain.on('openAudioDirectory', () => {
   dialog.showOpenDialog({
     properties: ['openDirectory'],
   }).then(({ filePaths }) => {
-    sendToMainWindow('audioDirectoryOpened', {
-      filePaths,
+    const [dir] = filePaths || [];
+    glob(`${dir}/**/*`, (error, filenames) => {
+      sendToMainWindow('audioDirectoryOpened', {
+        filePaths: filenames,
+      });
     });
   });
 });
