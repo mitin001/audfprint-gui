@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 const slash = '/';
 
 export default function ReviewAudioFiles() {
-  const [filenames, setFilenames] = useState([]);
+  const [systemData, setSystemData] = useState({ root: '', filenames: [], maxCores: 1 });
   const [fileTypes, setFileTypes] = useState('.mp3,.wav,.flac');
   const [levels, setLevels] = useState(0);
+  const [cores, setCores] = useState(1);
 
-  const [firstFilename = ''] = filenames;
+  const { root = '', filenames = [], maxCores = 1 } = systemData || {};
   const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
   const filteredFilenames = filenames.filter((filename) => (
     trimmedFileTypes.some((fileType) => filename.indexOf(fileType) !== -1)
@@ -19,10 +20,10 @@ export default function ReviewAudioFiles() {
     }
     return parts.slice(levels, length).join(slash);
   });
-  const maxLevels = firstFilename.split(slash).length - 1;
+  const maxLevels = root.split(slash).length;
 
-  window.ipc.on('audioDirectoryOpened', (event, { filePaths }) => {
-    setFilenames(filePaths);
+  window.ipc.on('audioDirectoryOpened', (event, data) => {
+    setSystemData(data);
   });
 
   return (
@@ -48,6 +49,18 @@ export default function ReviewAudioFiles() {
           max={maxLevels}
           value={levels}
           onChange={({ target: { value } }) => setLevels(value)}
+        />
+      </div>
+      <div className="ui labeled input">
+        <div className="ui label">
+          Cores
+        </div>
+        <input
+          type="number"
+          min={1}
+          max={maxCores}
+          value={cores}
+          onChange={({ target: { value } }) => setCores(value)}
         />
       </div>
       <ol>
