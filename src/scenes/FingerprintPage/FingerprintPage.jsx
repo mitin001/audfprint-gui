@@ -5,7 +5,7 @@ import ReviewAudioFiles from './ReviewAudioFiles';
 
 export default function FingerprintPage() {
   return (
-    <div className="ui container">
+    <div className="ui page">
       <h1 className="ui header">Fingerprint</h1>
       <span
         className="layout-link"
