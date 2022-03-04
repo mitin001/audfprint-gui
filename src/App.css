@@ -64,3 +64,7 @@ body,
 .page {
   margin: 1em;
 }
+
+.ui.input {
+  margin: 0.5em 0.5em 0;
+}
