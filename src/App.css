@@ -36,6 +36,10 @@ body,
   white-space: nowrap;
 }
 
+.container .layout-link {
+  background-color: white;
+}
+
 .layout-link span {
   display: inline-block;
   vertical-align: middle;
@@ -49,6 +53,7 @@ body,
 
 .layout-link:hover {
   background-color: #fbf8f4;
+  cursor: pointer;
 }
 
 .layout-main {

@@ -109,6 +109,16 @@ ipcMain.on('checkForUpdates', () => {
   autoUpdater.checkForUpdates();
 });
 
+ipcMain.on('openAudioDirectory', () => {
+  dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  }).then(({ filePaths }) => {
+    sendToMainWindow('audioDirectoryOpened', {
+      filePaths,
+    });
+  });
+});
+
 autoUpdater.on('download-progress', (progress) => {
   sendToMainWindow('updateDownloadProgress', progress);
 });
