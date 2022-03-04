@@ -6,8 +6,10 @@ export default function ReviewAudioFiles() {
   window.ipc.on('audioDirectoryOpened', (event, { filePaths }) => {
     setFilenames(filePaths);
   });
-  const regExps = fileTypes.split(',').map((fileType) => new RegExp(`${fileType.trim()}$`));
-  const filteredFilenames = filenames.filter((filename) => regExps.every((regExp) => regExp.test(filename)));
+  const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
+  const filteredFilenames = filenames.filter((filename) => (
+    trimmedFileTypes.some((fileType) => filename.indexOf(fileType) !== -1)
+  ));
   return (
     <div className="ui">
       <div className="ui labeled input">
