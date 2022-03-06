@@ -131,15 +131,25 @@ ipcMain.on('storeDatabase', (event, options) => {
   const { root, filenames, cores } = options || {};
   const [, dir] = root.match(/.+\/(.+)$/);
 
-  const argv = ['new', '-dname', `${root}/${dir}.pklz`, '-H', cores, ...filenames];
+  const argv = ['audfprint', 'new', '-d', `${root}/${dir}.pklz`, '-H', cores, ...filenames];
   const quotedArgv = argv.map((arg) => JSON.stringify(arg));
 
-  const code = `from audfprint import main; main(${quotedArgv.join(',')})`;
+  const path = app.getAppPath();
+  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
 
-  const pyShell = PythonShell.runString(code, null, (error) => {
+  const code = `
+    import sys
+    sys.path.append(${quotedDependencyPath})
+    from audfprint import main
+    main([${quotedArgv.join(',')}])
+  `.replace(/\n\s+/g, '\n');
+
+  PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
+    if (!error) {
+      return;
+    }
     sendToMainWindow('pythonOutput', error.toString());
-  });
-  pyShell.on('message', (message) => {
+  }).on('message', (message) => {
     sendToMainWindow('pythonOutput', message);
   });
 });

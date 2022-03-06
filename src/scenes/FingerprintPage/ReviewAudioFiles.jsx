@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RiSave3Fill } from 'react-icons/ri';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from './PythonOutput';
@@ -25,9 +25,11 @@ export default function ReviewAudioFiles() {
   });
   const maxLevels = root.split(slash).length;
 
-  window.ipc.on('audioDirectoryOpened', (event, data) => {
-    setSystemData(data);
-  });
+  useEffect(() => {
+    window.ipc.on('audioDirectoryOpened', (event, data) => {
+      setSystemData(data);
+    });
+  }, []);
 
   return (
     <div className="ui">
