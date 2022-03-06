@@ -24,6 +24,7 @@
     "moment": "^2.27.0",
     "node-sass": "^4.14.1",
     "prop-types": "^15.7.2",
+    "python-shell": "^3.0.1",
     "react": "^16.13.1",
     "react-date-range": "^1.0.3",
     "react-dom": "^16.13.1",
