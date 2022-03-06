@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { RiSave3Fill } from 'react-icons/ri';
+import ReactTooltip from 'react-tooltip';
+import PythonOutput from './PythonOutput';
 
 const slash = '/';
 
@@ -63,6 +66,22 @@ export default function ReviewAudioFiles() {
           onChange={({ target: { value } }) => setCores(value)}
         />
       </div>
+      <span
+        className="layout-link"
+        role="button"
+        tabIndex={0}
+        onKeyPress={() => window.ipc.send('storeDatabase', { root, filenames: filteredFilenames, cores })}
+        onClick={() => window.ipc.send('storeDatabase', { root, filenames: filteredFilenames, cores })}
+      >
+        <RiSave3Fill
+          data-delay-show="500"
+          data-tip="Fingerprint the selected audio files and store the database with them"
+          size={25}
+        />
+        <ReactTooltip />
+        <span>Start</span>
+      </span>
+      <PythonOutput />
       <ol>
         {
           filteredFilenames.map((filename) => <li key={filename}>{filename}</li>)

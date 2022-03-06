@@ -8,6 +8,7 @@ const { existsSync } = require('fs');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
+const { PythonShell } = require('python-shell');
 const openAboutWindow = require('about-window').default;
 require('dotenv').config();
 
@@ -123,6 +124,23 @@ ipcMain.on('openAudioDirectory', () => {
         maxCores: os.cpus().length,
       });
     });
+  });
+});
+
+ipcMain.on('storeDatabase', (event, options) => {
+  const { root, filenames, cores } = options || {};
+  const [, dir] = root.match(/.+\/(.+)$/);
+
+  const argv = ['new', '-dname', `${root}/${dir}.pklz`, '-H', cores, ...filenames];
+  const quotedArgv = argv.map((arg) => JSON.stringify(arg));
+
+  const code = `from audfprint import main; main(${quotedArgv.join(',')})`;
+
+  const pyShell = PythonShell.runString(code, null, (error) => {
+    sendToMainWindow('pythonOutput', error.toString());
+  });
+  pyShell.on('message', (message) => {
+    sendToMainWindow('pythonOutput', message);
   });
 });
 
