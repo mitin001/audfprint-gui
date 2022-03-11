@@ -31,6 +31,10 @@ export default function ReviewAudioFiles() {
     });
   }, []);
 
+  if (!root) {
+    return <div />;
+  }
+
   return (
     <div className="ui">
       <div className="ui labeled input">
