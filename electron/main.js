@@ -201,11 +201,11 @@ ipcMain.on('checkDependencies', () => {
         return;
       }
       if (error.toString().indexOf('ModuleNotFoundError') !== -1) {
+        sendToMainWindow('installationStatusChanged', { installing: true });
+
         PythonShell.runString(getPipScript(), null, (pipError) => {
           if (!pipError) {
-            dialog.showMessageBox({
-              message: 'Installation succeeded',
-            });
+            sendToMainWindow('installationStatusChanged', { installing: false });
             return;
           }
           dialog.showErrorBox('Installation error', pipError.toString());

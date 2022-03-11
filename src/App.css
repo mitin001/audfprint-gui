@@ -12,6 +12,10 @@ body,
   width: 100%;
 }
 
+.install {
+  margin: 50px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 160px 3fr;
