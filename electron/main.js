@@ -34,6 +34,18 @@ const getAboutWindowOptions = () => {
   return aboutWindowOptions;
 };
 
+const getAudfprintScript = (argv) => {
+  const path = app.getAppPath();
+  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
+  const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
+  return `
+    import sys
+    sys.path.append(${quotedDependencyPath})
+    from audfprint import main
+    main([${quotedArgv.join(',')}])
+  `.replace(/\n\s+/g, '\n');
+};
+
 const handlePythonError = (error) => {
   const lines = [
     'You will be taken to the download page for Python.',
@@ -154,19 +166,7 @@ ipcMain.on('openAudioDirectory', () => {
 ipcMain.on('storeDatabase', (event, options) => {
   const { root, filenames, cores } = options || {};
   const [, dir] = root.match(/.+\/(.+)$/);
-
-  const argv = ['audfprint', 'new', '-d', `${root}/${dir}.pklz`, '-H', cores, ...filenames];
-  const quotedArgv = argv.map((arg) => JSON.stringify(arg));
-
-  const path = app.getAppPath();
-  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
-
-  const code = `
-    import sys
-    sys.path.append(${quotedDependencyPath})
-    from audfprint import main
-    main([${quotedArgv.join(',')}])
-  `.replace(/\n\s+/g, '\n');
+  const code = getAudfprintScript(['new', '-d', `${root}/${dir}.pklz`, '-H', cores, ...filenames]);
 
   PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
     if (!error) {
@@ -179,20 +179,9 @@ ipcMain.on('storeDatabase', (event, options) => {
 });
 
 ipcMain.on('checkDependencies', () => {
-  const argv = ['audfprint', '--version'];
-  const quotedArgv = argv.map((arg) => JSON.stringify(arg));
-
-  const path = app.getAppPath();
-  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
-
-  const code = `
-    import sys
-    sys.path.append(${quotedDependencyPath})
-    from audfprint import main
-    main([${quotedArgv.join(',')}])
-  `.replace(/\n\s+/g, '\n');
-
   PythonShell.getVersion().then(({ stdout }) => {
+    const code = getAudfprintScript(['--version']);
+
     pythonVersion = stdout.trim();
 
     PythonShell.runString(code, null, (error, version) => {
