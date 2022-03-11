@@ -1,7 +1,7 @@
 // Modules to control application life and create native browser window
 require('dotenv').config();
 const {
-  app, ipcMain, Menu, dialog,
+  app, ipcMain, Menu, dialog, shell,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join } = require('path');
@@ -14,12 +14,17 @@ const openAboutWindow = require('about-window').default;
 const { createAppWindow, isMainWindowDefined, sendToMainWindow } = require('./main/app-process');
 
 let audfprintVersion = null;
+let pythonVersion = null;
 
 const getAboutWindowOptions = () => {
   const packageJsonDir = join(__dirname, '..');
   const prodIconPath = join(packageJsonDir, 'icon.png');
   const devIconPath = join(packageJsonDir, 'build/icon.png');
-  const aboutWindowOptions = { description: `audfprint version: ${audfprintVersion}`, icon_path: '' };
+  const descriptionLines = [
+    `Python version: ${pythonVersion}`,
+    `audfprint version: ${audfprintVersion}`,
+  ];
+  const aboutWindowOptions = { description: descriptionLines.join('\n'), icon_path: '' };
   if (existsSync(devIconPath)) {
     aboutWindowOptions.icon_path = devIconPath;
     aboutWindowOptions.package_json_dir = packageJsonDir;
@@ -27,6 +32,20 @@ const getAboutWindowOptions = () => {
     aboutWindowOptions.icon_path = prodIconPath;
   }
   return aboutWindowOptions;
+};
+
+const handlePythonError = (error) => {
+  const lines = [
+    'You will be taken to the download page for Python.',
+    error.toString(),
+  ];
+  dialog.showMessageBox({
+    title: 'Python not installed',
+    message: 'Python is required for this application.',
+    detail: lines.join('\n'),
+  }).then(() => {
+    shell.openExternal('https://www.python.org/downloads/');
+  });
 };
 
 // This method will be called when Electron has finished
@@ -173,12 +192,20 @@ ipcMain.on('checkDependencies', () => {
     main([${quotedArgv.join(',')}])
   `.replace(/\n\s+/g, '\n');
 
-  PythonShell.runString(code, null, (error, version) => {
-    if (!error) {
-      audfprintVersion = version;
-      return;
-    }
-    dialog.showErrorBox('Python error', error.toString());
+  PythonShell.getVersion().then(({ stdout }) => {
+    pythonVersion = stdout.trim();
+
+    PythonShell.runString(code, null, (error, version) => {
+      if (!error) {
+        audfprintVersion = version;
+        return;
+      }
+      dialog.showErrorBox('Python error', error.toString());
+    }).on('error', (error) => {
+      handlePythonError(error);
+    });
+  }).catch((error) => {
+    handlePythonError(error);
   });
 });
 
