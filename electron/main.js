@@ -46,6 +46,17 @@ const getAudfprintScript = (argv) => {
   `.replace(/\n\s+/g, '\n');
 };
 
+const getPipScript = () => {
+  const path = app.getAppPath();
+  const quotedReqPath = JSON.stringify(`${path}/public/audfprint/requirements.txt`);
+  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
+  return `
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", ${quotedReqPath}, "-t", ${quotedDependencyPath}])
+  `.replace(/\n\s+/g, '\n');
+};
+
 const handlePythonError = (error) => {
   const lines = [
     'You will be taken to the download page for Python.',
@@ -189,7 +200,19 @@ ipcMain.on('checkDependencies', () => {
         audfprintVersion = version;
         return;
       }
-      dialog.showErrorBox('Python error', error.toString());
+      if (error.toString().indexOf('ModuleNotFoundError') !== -1) {
+        PythonShell.runString(getPipScript(), null, (pipError) => {
+          if (!pipError) {
+            dialog.showMessageBox({
+              message: 'Installation succeeded',
+            });
+            return;
+          }
+          dialog.showErrorBox('Installation error', pipError.toString());
+        });
+      } else {
+        dialog.showErrorBox('Error', error.toString());
+      }
     }).on('error', (error) => {
       handlePythonError(error);
     });
