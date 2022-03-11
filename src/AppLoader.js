@@ -3,6 +3,7 @@ import App from './App';
 
 async function init() {
   if (window.ipc && typeof window.ipc.send === 'function') {
+    window.ipc.send('checkDependencies');
     window.ipc.send('checkForUpdates');
     window.ipc.on('log', (event, message) => {
       let log = [];

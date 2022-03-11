@@ -1,4 +1,5 @@
 // Modules to control application life and create native browser window
+require('dotenv').config();
 const {
   app, ipcMain, Menu, dialog,
 } = require('electron');
@@ -10,24 +11,28 @@ const os = require('os');
 const glob = require('glob');
 const { PythonShell } = require('python-shell');
 const openAboutWindow = require('about-window').default;
-require('dotenv').config();
-
 const { createAppWindow, isMainWindowDefined, sendToMainWindow } = require('./main/app-process');
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+let audfprintVersion = null;
+
+const getAboutWindowOptions = () => {
   const packageJsonDir = join(__dirname, '..');
   const prodIconPath = join(packageJsonDir, 'icon.png');
   const devIconPath = join(packageJsonDir, 'build/icon.png');
-  const aboutWindowOptions = {};
+  const aboutWindowOptions = { description: `audfprint version: ${audfprintVersion}`, icon_path: '' };
   if (existsSync(devIconPath)) {
     aboutWindowOptions.icon_path = devIconPath;
     aboutWindowOptions.package_json_dir = packageJsonDir;
   } else {
     aboutWindowOptions.icon_path = prodIconPath;
   }
+  return aboutWindowOptions;
+};
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', () => {
   const template = [
     {
       label: 'File',
@@ -51,7 +56,7 @@ app.on('ready', () => {
       submenu: [
         {
           label: 'About',
-          click: () => openAboutWindow(aboutWindowOptions),
+          click: () => openAboutWindow(getAboutWindowOptions()),
         },
         {
           label: 'Quit',
@@ -151,6 +156,29 @@ ipcMain.on('storeDatabase', (event, options) => {
     sendToMainWindow('pythonOutput', error.toString());
   }).on('message', (message) => {
     sendToMainWindow('pythonOutput', message);
+  });
+});
+
+ipcMain.on('checkDependencies', () => {
+  const argv = ['audfprint', '--version'];
+  const quotedArgv = argv.map((arg) => JSON.stringify(arg));
+
+  const path = app.getAppPath();
+  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
+
+  const code = `
+    import sys
+    sys.path.append(${quotedDependencyPath})
+    from audfprint import main
+    main([${quotedArgv.join(',')}])
+  `.replace(/\n\s+/g, '\n');
+
+  PythonShell.runString(code, null, (error, version) => {
+    if (!error) {
+      audfprintVersion = version;
+      return;
+    }
+    dialog.showErrorBox('Python error', error.toString());
   });
 });
 
