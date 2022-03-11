@@ -2,7 +2,7 @@
   "name": "audfprint-gui",
   "author": "mitin001",
   "description": "GUI for audfprint",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
