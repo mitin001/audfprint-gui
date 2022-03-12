@@ -53,7 +53,7 @@ const getPipScript = () => {
   return `
     import subprocess
     import sys
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", ${quotedReqPath}, "-t", ${quotedDependencyPath}])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", ${quotedReqPath}, "-t", ${quotedDependencyPath}, "--no-user"])
   `.replace(/\n\s+/g, '\n');
 };
 
