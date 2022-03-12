@@ -2,7 +2,7 @@
   "name": "audfprint-gui",
   "author": "mitin001",
   "description": "GUI for audfprint",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "dependencies": {
     "about-window": "^1.14.0",
     "dotenv": "^8.2.0",
