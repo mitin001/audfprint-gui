@@ -36,7 +36,8 @@ const getAboutWindowOptions = () => {
 
 const getAudfprintScript = (argv) => {
   const path = app.getAppPath();
-  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
+  const s = process.platform === 'win32' ? '\\' : '/';
+  const quotedDependencyPath = JSON.stringify(`${path}${s}public${s}audfprint`);
   const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
   return `
     import sys
@@ -48,8 +49,9 @@ const getAudfprintScript = (argv) => {
 
 const getPipScript = () => {
   const path = app.getAppPath();
-  const quotedReqPath = JSON.stringify(`${path}/public/audfprint/requirements.txt`);
-  const quotedDependencyPath = JSON.stringify(`${path}/public/audfprint`);
+  const s = process.platform === 'win32' ? '\\' : '/';
+  const quotedReqPath = JSON.stringify(`${path}${s}public${s}audfprint${s}requirements.txt`);
+  const quotedDependencyPath = JSON.stringify(`${path}${s}public${s}audfprint`);
   return `
     import subprocess
     import sys
@@ -169,6 +171,7 @@ ipcMain.on('openAudioDirectory', () => {
         root,
         filenames,
         maxCores: os.cpus().length,
+        platform: process.platform,
       });
     });
   });

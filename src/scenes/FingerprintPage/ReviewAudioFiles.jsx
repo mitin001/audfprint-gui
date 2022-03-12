@@ -3,15 +3,18 @@ import { RiSave3Fill } from 'react-icons/ri';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from './PythonOutput';
 
-const slash = '/';
-
 export default function ReviewAudioFiles() {
-  const [systemData, setSystemData] = useState({ root: '', filenames: [], maxCores: 1 });
+  const [systemData, setSystemData] = useState({
+    root: '', filenames: [], maxCores: 1, platform: '',
+  });
   const [fileTypes, setFileTypes] = useState('.mp3,.wav,.flac');
   const [levels, setLevels] = useState(0);
   const [cores, setCores] = useState(1);
 
-  const { root = '', filenames = [], maxCores = 1 } = systemData || {};
+  const {
+    root = '', filenames = [], maxCores = 1, platform = '',
+  } = systemData || {};
+  const slash = platform === 'win32' ? '\\' : '/';
   const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
   const filteredFilenames = filenames.filter((filename) => (
     trimmedFileTypes.some((fileType) => filename.indexOf(fileType) !== -1)
