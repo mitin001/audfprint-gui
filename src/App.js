@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Typography } from '@mui/material';
 import AppContent from './AppContent';
 
 const App = () => {
@@ -12,7 +13,7 @@ const App = () => {
   }, []);
 
   if (installing) {
-    return <div className="install"><h1>Installation in progress...</h1></div>;
+    return <Typography variant="h4" component="h4" sx={{ m: 5 }}>Installation in progress...</Typography>;
   }
 
   return <AppContent />;
