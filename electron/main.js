@@ -50,8 +50,9 @@ const getAudfprintScript = (argv) => {
     import sys
     sys.path.append(${quotedDependencyPath})
     from audfprint import main
-    main([${quotedArgv.join(',')}])
-  `.replace(/\n\s+/g, '\n');
+    if __name__ == "__main__":
+        main([${quotedArgv.join(',')}])
+  `.replace(/\n\s{4}/g, '\n');
 };
 
 const getPipScript = () => {
@@ -62,7 +63,7 @@ const getPipScript = () => {
     import subprocess
     import sys
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", ${quotedReqPath}, "-t", ${quotedDependencyPath}, "--no-user"])
-  `.replace(/\n\s+/g, '\n');
+  `.replace(/\n\s{4}/g, '\n');
 };
 
 const handlePythonError = (error) => {
