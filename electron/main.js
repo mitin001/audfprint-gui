@@ -4,7 +4,7 @@ const {
   app, ipcMain, Menu, dialog, shell,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
-const { join } = require('path');
+const { join, parse } = require('path');
 const { existsSync } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -185,16 +185,24 @@ ipcMain.on('openAudioDirectory', () => {
 
 ipcMain.on('storeDatabase', (event, options) => {
   const { root, filenames } = options || {};
-  const [, dir] = root.match(/.+\/(.+)$/);
-  const code = getAudfprintScript(['new', '-d', `${root}/${dir}.pklz`, ...filenames]);
+  const { base: defaultPath } = parse(root) || {};
 
-  PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
-    if (!error) {
+  dialog.showSaveDialog({ defaultPath }).then(({ filePath, canceled }) => {
+    if (canceled) {
       return;
     }
-    sendToMainWindow('pythonOutput', error.toString());
-  }).on('message', (message) => {
-    sendToMainWindow('pythonOutput', message);
+    const { ext } = parse(filePath) || {};
+    const saveAs = ext ? filePath : `${filePath}.pklz`;
+    const code = getAudfprintScript(['new', '-d', saveAs, ...filenames]);
+
+    PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
+      if (!error) {
+        return;
+      }
+      sendToMainWindow('pythonOutput', error.toString());
+    }).on('message', (message) => {
+      sendToMainWindow('pythonOutput', message);
+    });
   });
 });
 

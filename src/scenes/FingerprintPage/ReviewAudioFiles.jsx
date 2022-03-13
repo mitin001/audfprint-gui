@@ -41,7 +41,7 @@ export default function ReviewAudioFiles() {
           onKeyPress={() => window.ipc.send('storeDatabase', { root, filenames: filteredFilenames })}
           onClick={() => window.ipc.send('storeDatabase', { root, filenames: filteredFilenames })}
         >
-          Start
+          Save fingerprint database
         </Button>
       </Box>
       <PythonOutput />
