@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Box } from '@mui/material';
 
 export default function PythonOutput() {
   const [newLine, setNewLine] = useState('');
@@ -17,12 +18,10 @@ export default function PythonOutput() {
   }, [newLine]);
 
   return (
-    <div className="ui">
-      <ol>
-        {
-          lines.map((line) => <li key={line}>{line}</li>)
-        }
-      </ol>
-    </div>
+    <Box sx={{ mt: 2 }}>
+      {
+        lines.map((line) => <pre style={{ margin: 0 }} key={line}>{line}</pre>)
+      }
+    </Box>
   );
 }
