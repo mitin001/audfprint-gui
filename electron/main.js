@@ -117,7 +117,7 @@ app.on('ready', () => {
   ];
   if (process.platform === 'darwin') {
     template.unshift({
-      label: 'audfprint GUI',
+      label: 'Audio Fingerprinter',
       role: 'appmenu',
     });
   }
@@ -184,9 +184,9 @@ ipcMain.on('openAudioDirectory', () => {
 });
 
 ipcMain.on('storeDatabase', (event, options) => {
-  const { root, filenames, cores } = options || {};
+  const { root, filenames } = options || {};
   const [, dir] = root.match(/.+\/(.+)$/);
-  const code = getAudfprintScript(['new', '-d', `${root}/${dir}.pklz`, '-H', cores, ...filenames]);
+  const code = getAudfprintScript(['new', '-d', `${root}/${dir}.pklz`, ...filenames]);
 
   PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
     if (!error) {

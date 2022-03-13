@@ -1,6 +1,6 @@
 {
   "short_name": "audfprint-gui",
-  "name": "audfprint GUI",
+  "name": "Audio Fingerprinter",
   "icons": [
     {
       "src": "favicon.ico",
