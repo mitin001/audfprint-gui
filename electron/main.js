@@ -184,7 +184,7 @@ ipcMain.on('openAudioDirectory', () => {
 });
 
 ipcMain.on('storeDatabase', (event, options) => {
-  const { root, filenames } = options || {};
+  const { root, filenames, cores } = options || {};
   const { base: defaultPath } = parse(root) || {};
 
   dialog.showSaveDialog({ defaultPath }).then(({ filePath, canceled }) => {
@@ -193,7 +193,7 @@ ipcMain.on('storeDatabase', (event, options) => {
     }
     const { ext } = parse(filePath) || {};
     const saveAs = ext ? filePath : `${filePath}.pklz`;
-    const code = getAudfprintScript(['new', '-d', saveAs, ...filenames]);
+    const code = getAudfprintScript(['new', '-H', cores, '-d', saveAs, ...filenames]);
 
     PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
       if (!error) {
