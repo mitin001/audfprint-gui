@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
@@ -17,6 +17,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { IoMdFingerPrint } from 'react-icons/io';
 import ReactTooltip from 'react-tooltip';
+import mainTheme from './theme';
 import FingerprintPage from './scenes/FingerprintPage/FingerprintPage';
 
 const drawerWidth = 240;
@@ -87,7 +88,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 );
 
 export default function AppContent() {
-  const theme = useTheme();
+  const theme = mainTheme;
   const [open, setOpen] = React.useState(false);
 
   const handleDrawerOpen = () => {
@@ -101,7 +102,7 @@ export default function AppContent() {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open}>
+      <AppBar position="fixed" open={open} theme={theme}>
         <Toolbar>
           <IconButton
             color="inherit"

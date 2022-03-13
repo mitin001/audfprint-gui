@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RiSave3Fill } from 'react-icons/ri';
 import { Box, Button, TextField } from '@mui/material';
+import theme from '../../theme';
 import PythonOutput from './PythonOutput';
 
 export default function ReviewAudioFiles() {
@@ -24,7 +25,7 @@ export default function ReviewAudioFiles() {
   }
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box sx={{ mt: 3 }} theme={theme}>
       <TextField
         label="File types"
         defaultValue=".mp3,.wav,.flac"
@@ -34,6 +35,7 @@ export default function ReviewAudioFiles() {
       />
       <Box sx={{ mt: 1 }}>
         <Button
+          theme={theme}
           variant="contained"
           startIcon={<RiSave3Fill size={25} />}
           onKeyPress={() => window.ipc.send('storeDatabase', { root, filenames: filteredFilenames })}
