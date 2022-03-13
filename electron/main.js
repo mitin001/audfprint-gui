@@ -34,10 +34,17 @@ const getAboutWindowOptions = () => {
   return aboutWindowOptions;
 };
 
-const getAudfprintScript = (argv) => {
+const getAudfprintPath = () => {
   const path = app.getAppPath();
-  const s = process.platform === 'win32' ? '\\' : '/';
-  const quotedDependencyPath = JSON.stringify(`${path}${s}public${s}audfprint`);
+  if (process.platform === 'win32') {
+    return join(`${path}.unpacked`, 'build', 'audfprint');
+  }
+  return join(path, 'public', 'audfprint');
+};
+
+const getAudfprintScript = (argv) => {
+  const path = getAudfprintPath();
+  const quotedDependencyPath = JSON.stringify(path);
   const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
   return `
     import sys
@@ -48,10 +55,9 @@ const getAudfprintScript = (argv) => {
 };
 
 const getPipScript = () => {
-  const path = app.getAppPath();
-  const s = process.platform === 'win32' ? '\\' : '/';
-  const quotedReqPath = JSON.stringify(`${path}${s}public${s}audfprint${s}requirements.txt`);
-  const quotedDependencyPath = JSON.stringify(`${path}${s}public${s}audfprint`);
+  const path = getAudfprintPath();
+  const quotedDependencyPath = JSON.stringify(path);
+  const quotedReqPath = JSON.stringify(join(path, 'requirements.txt'));
   return `
     import subprocess
     import sys
