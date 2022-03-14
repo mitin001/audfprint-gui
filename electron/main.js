@@ -76,7 +76,7 @@ const handlePythonError = (error) => {
     message: 'Python is required for this application.',
     detail: lines.join('\n'),
   }).then(() => {
-    shell.openExternal('https://www.python.org/downloads/');
+    shell.openExternal('https://www.python.org/downloads/').then(() => app.quit());
   });
 };
 
