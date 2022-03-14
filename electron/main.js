@@ -176,7 +176,12 @@ ipcMain.on('openAudioDirectory', () => {
     glob(`${root}/**/*`, (error, filenames) => {
       sendToMainWindow('audioDirectoryOpened', {
         root,
-        filenames,
+        filenames: filenames.map((filename) => {
+          if (process.platform === 'win32') {
+            return filename.replace('/', '\\');
+          }
+          return filename;
+        }),
         maxCores: os.cpus().length,
         platform: process.platform,
       });
