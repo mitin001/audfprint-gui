@@ -37,7 +37,7 @@
     "prettier": "prettier --config .prettierrc.json --write 'src/**/*{css,js,jsx,json}'",
     "start-electron": "electron .",
     "package-electron-mac": "electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
-    "package-electron-win": "electron-builder build --win -c.extraMetadata.main=build/electron/main.js --publish always"
+    "package-electron-win": "electron-builder build --win -c.extraMetadata.main=build/electron/main.js"
   },
   "main": "electron/main.js",
   "build": {
@@ -66,8 +66,7 @@
       "icon": "build/icon.png"
     },
     "asarUnpack": [
-      "build/audfprint/**/*",
-      "build/bin/*"
+      "build/audfprint/**/*"
     ]
   },
   "homepage": "./",

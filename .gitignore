@@ -112,5 +112,5 @@ build/
 
 # IDE tags
 tags
-public/audfprint
-public/bin
+public/audfprint/*
+!public/audfprint/audio_read.py
