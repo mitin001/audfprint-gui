@@ -201,9 +201,23 @@ class FFmpegAudioFile(object):
         if sample_rate:
             popen_args.extend(['-ar', str(sample_rate)])
         popen_args.append('-')
+        
+        # add audfprint directory to path in case ffmpeg can be found there
+
+        audfprint_dir = os.path.dirname(os.path.realpath(__file__))
+        
+        my_env = os.environ.copy()
+        if ";" in my_env["PATH"]:
+            my_env["PATH"] = audfprint_dir + ";" + my_env["PATH"]
+        elif ":" in my_env["PATH"]:
+            my_env["PATH"] = audfprint_dir + ":" + my_env["PATH"]
+        
         self.proc = subprocess.Popen(
                 popen_args,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                shell=True,
+                env=my_env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
         )
 
         # Start another thread to consume the standard output of the
