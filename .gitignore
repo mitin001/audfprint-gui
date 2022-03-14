@@ -113,3 +113,4 @@ build/
 # IDE tags
 tags
 public/audfprint
+public/bin
