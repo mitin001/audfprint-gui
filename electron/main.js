@@ -36,10 +36,7 @@ const getAboutWindowOptions = () => {
 
 const getAudfprintPath = () => {
   const path = app.getAppPath();
-  if (process.platform === 'win32') {
-    return join(`${path}.unpacked`, 'build', 'audfprint');
-  }
-  return join(path, 'public', 'audfprint');
+  return join(`${path}.unpacked`, 'build', 'audfprint');
 };
 
 const getAudfprintScript = (argv) => {
