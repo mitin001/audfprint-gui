@@ -3,6 +3,7 @@
 ## How to contribute
 
 ```sh
+nvm use
 npm start
 npm run start-electron
 ```
