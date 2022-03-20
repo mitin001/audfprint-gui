@@ -214,7 +214,7 @@ class FFmpegAudioFile(object):
         
         self.proc = subprocess.Popen(
                 popen_args,
-                shell=True,
+                shell=(os.name == 'nt'),
                 env=my_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
