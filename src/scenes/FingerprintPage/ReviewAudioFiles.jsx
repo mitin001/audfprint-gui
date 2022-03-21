@@ -9,7 +9,7 @@ import PythonOutput from './PythonOutput';
 
 export default function ReviewAudioFiles() {
   const [systemData, setSystemData] = useState({ root: '', filenames: [], maxCores: 1 });
-  const [fileTypes, setFileTypes] = useState('.mp3,.wav,.flac');
+  const [fileTypes, setFileTypes] = useState(localStorage.getItem('fileTypes') || '.mp3,.wav,.flac');
   const [cores, setCores] = useState(1);
 
   const { root = '', filenames = [], maxCores = 1 } = systemData || {};
@@ -37,10 +37,13 @@ export default function ReviewAudioFiles() {
       <Grid container spacing={0} alignItems="top">
         <TextField
           label="File types"
-          defaultValue=".mp3,.wav,.flac"
+          defaultValue={fileTypes}
           value={fileTypes}
           helperText="Refine the list of files to fingerprint"
-          onChange={({ target: { value } }) => setFileTypes(value)}
+          onChange={({ target: { value } }) => {
+            localStorage.setItem('fileTypes', value);
+            setFileTypes(value);
+          }}
         />
         <Grid item sx={{ ml: 2 }}>
           <Typography id="input-slider" gutterBottom>
