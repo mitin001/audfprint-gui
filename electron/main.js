@@ -38,7 +38,11 @@ const getAboutWindowOptions = () => {
 
 const getAudfprintPath = () => {
   const path = app.getAppPath();
-  return join(`${path}.unpacked`, 'build', 'audfprint');
+  const pathUnpacked = `${path}.unpacked`;
+  if (existsSync(pathUnpacked)) {
+    return join(pathUnpacked, 'build', 'audfprint');
+  }
+  return join(path, 'build', 'audfprint');
 };
 
 const getAudfprintScript = (argv) => {
