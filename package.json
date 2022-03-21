@@ -31,13 +31,14 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "rm -rf public/audfprint/__pycache__",
     "build": "react-scripts build && cp -r electron build/electron",
     "remove-win-ffmpeg": "mv public/audfprint/ffmpeg.exe ./ffmpeg.exe",
     "remove-mac-ffmpeg": "mv public/audfprint/ffmpeg ./ffmpeg",
     "restore-win-ffmpeg": "mv ./ffmpeg.exe public/audfprint/ffmpeg.exe",
     "restore-mac-ffmpeg": "mv ./ffmpeg public/audfprint/ffmpeg",
-    "build-win": "npm run remove-mac-ffmpeg && react-scripts build && cp -r electron build/electron && npm run restore-mac-ffmpeg",
-    "build-mac": "npm run remove-win-ffmpeg && react-scripts build && cp -r electron build/electron && npm run restore-win-ffmpeg",
+    "build-win": "npm run prebuild && npm run remove-mac-ffmpeg && react-scripts build && cp -r electron build/electron && npm run restore-mac-ffmpeg",
+    "build-mac": "npm run prebuild && npm run remove-win-ffmpeg && react-scripts build && cp -r electron build/electron && npm run restore-win-ffmpeg",
     "start-electron": "electron .",
     "package-electron-mac": "npm run build-mac && electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
     "package-electron-win": "npm run build-win && electron-builder build --win -c.extraMetadata.main=build/electron/main.js --publish always"
