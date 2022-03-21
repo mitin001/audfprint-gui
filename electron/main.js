@@ -279,14 +279,18 @@ ipcMain.on('storeDatabase', (event, options) => {
     const saveAs = ext ? filePath : `${filePath}.pklz`;
     const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', saveAs, ...filenames]);
 
-    sendToMainWindow('pythonOutput', 'Fingerprinting...');
+    sendToMainWindow('pythonOutput', { line: 'Fingerprinting...' });
     PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
       if (!error) {
         return;
       }
-      sendToMainWindow('pythonOutput', error.toString());
+      sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
     }).on('message', (message) => {
-      sendToMainWindow('pythonOutput', message);
+      let error;
+      if (/Error/.test(message)) {
+        error = true;
+      }
+      sendToMainWindow('pythonOutput', { line: message, error });
     });
   });
 });
