@@ -4,17 +4,19 @@ const {
   app, ipcMain, Menu, dialog, shell,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
-const { join, parse } = require('path');
+const { join, parse, basename } = require('path');
 const { existsSync } = require('fs');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
+const find = require('findit');
 const { PythonShell } = require('python-shell');
 const openAboutWindow = require('about-window').default;
 const { createAppWindow, isMainWindowDefined, sendToMainWindow } = require('./main/app-process');
 
 let audfprintVersion = null;
 let pythonVersion = null;
+let pythonPath = null;
 
 const getAboutWindowOptions = () => {
   const packageJsonDir = join(__dirname, '..');
@@ -63,17 +65,96 @@ const getPipScript = () => {
   `.replace(/\n\s{4}/g, '\n');
 };
 
-const handlePythonError = (error) => {
-  const lines = [
-    'You will be taken to the download page for Python.',
-    error.toString(),
-  ];
-  dialog.showMessageBox({
-    title: 'Python not installed',
-    message: 'Python is required for this application.',
-    detail: lines.join('\n'),
-  }).then(() => {
-    shell.openExternal('https://www.python.org/downloads/').then(() => app.quit());
+const getPythonLocation = (root, pyName) => new Promise((resolve) => {
+  const finder = find(root);
+  finder.on('file', (file) => {
+    const name = basename(file);
+    if (name === pyName) {
+      resolve(file);
+    }
+  });
+  finder.on('link', (link) => {
+    const name = basename(link);
+    if (name === pyName) {
+      resolve(link);
+    }
+  });
+  finder.on('directory', (dir, stat, stop) => {
+    if (dir === root) {
+      return;
+    }
+    if (!/python/.test(dir)) {
+      stop();
+    }
+  });
+  finder.on('error', () => {
+    resolve(null);
+  });
+  finder.on('end', () => {
+    resolve(null);
+  });
+});
+
+const checkDependencies = (counter) => {
+  const handlePythonError = async (error) => {
+    if (process.platform === 'darwin') {
+      const pythonLocations = await Promise.all([
+        '/usr/local/Cellar', // Python installed by Homebrew but not linked in PATH
+        '/Library/Frameworks/Python.framework/Versions', // python installed via .pkg
+      ].map((root) => getPythonLocation(root, 'python3')));
+      pythonLocations.forEach((location) => {
+        if (location) {
+          pythonPath = location;
+        }
+      });
+    }
+    if (pythonPath) {
+      if (!counter) { // retry only once
+        checkDependencies(1);
+        return;
+      }
+    }
+    const lines = [
+      'You will be taken to the download page for Python.',
+      error.toString(),
+    ];
+    dialog.showMessageBox({
+      title: 'Python not installed',
+      message: 'Python is required for this application.',
+      detail: lines.join('\n'),
+    }).then(() => {
+      shell.openExternal('https://www.python.org/downloads/').then(() => app.quit());
+    });
+  };
+
+  PythonShell.getVersion(pythonPath).then(({ stdout }) => {
+    const code = getAudfprintScript(['--version']);
+
+    pythonVersion = stdout.trim();
+
+    PythonShell.runString(code, { pythonPath }, (error, version) => {
+      if (!error) {
+        audfprintVersion = version;
+        return;
+      }
+      if (error.toString().indexOf('ModuleNotFoundError') !== -1) {
+        sendToMainWindow('installationStatusChanged', { installing: true });
+
+        PythonShell.runString(getPipScript(), { pythonPath }, (pipError) => {
+          if (!pipError) {
+            sendToMainWindow('installationStatusChanged', { installing: false });
+            return;
+          }
+          dialog.showErrorBox('Installation error', pipError.toString());
+        });
+      } else {
+        dialog.showErrorBox('Error', error.toString());
+      }
+    }).on('error', async (error) => {
+      await handlePythonError(error);
+    });
+  }).catch(async (error) => {
+    await handlePythonError(error);
   });
 };
 
@@ -195,7 +276,7 @@ ipcMain.on('storeDatabase', (event, options) => {
     const code = getAudfprintScript(['new', '-H', cores, '-d', saveAs, ...filenames]);
 
     sendToMainWindow('pythonOutput', 'Fingerprinting...');
-    PythonShell.runString(code, { pythonOptions: ['-u'] }, (error) => {
+    PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
       if (!error) {
         return;
       }
@@ -206,37 +287,7 @@ ipcMain.on('storeDatabase', (event, options) => {
   });
 });
 
-ipcMain.on('checkDependencies', () => {
-  PythonShell.getVersion().then(({ stdout }) => {
-    const code = getAudfprintScript(['--version']);
-
-    pythonVersion = stdout.trim();
-
-    PythonShell.runString(code, null, (error, version) => {
-      if (!error) {
-        audfprintVersion = version;
-        return;
-      }
-      if (error.toString().indexOf('ModuleNotFoundError') !== -1) {
-        sendToMainWindow('installationStatusChanged', { installing: true });
-
-        PythonShell.runString(getPipScript(), null, (pipError) => {
-          if (!pipError) {
-            sendToMainWindow('installationStatusChanged', { installing: false });
-            return;
-          }
-          dialog.showErrorBox('Installation error', pipError.toString());
-        });
-      } else {
-        dialog.showErrorBox('Error', error.toString());
-      }
-    }).on('error', (error) => {
-      handlePythonError(error);
-    });
-  }).catch((error) => {
-    handlePythonError(error);
-  });
-});
+ipcMain.on('checkDependencies', () => checkDependencies());
 
 autoUpdater.on('download-progress', (progress) => {
   sendToMainWindow('updateDownloadProgress', progress);
