@@ -277,7 +277,7 @@ ipcMain.on('storeDatabase', (event, options) => {
     }
     const { ext } = parse(filePath) || {};
     const saveAs = ext ? filePath : `${filePath}.pklz`;
-    const code = getAudfprintScript(['new', '-H', cores, '-d', saveAs, ...filenames]);
+    const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', saveAs, ...filenames]);
 
     sendToMainWindow('pythonOutput', 'Fingerprinting...');
     PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
