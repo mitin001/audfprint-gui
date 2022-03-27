@@ -45,6 +45,15 @@ const getAudfprintPath = () => {
   return join(path, 'build', 'audfprint');
 };
 
+const getPrecomputePath = () => {
+  const path = app.getAppPath();
+  const pathUnpacked = `${path}.unpacked`;
+  if (existsSync(pathUnpacked)) {
+    return join(pathUnpacked, 'precompute');
+  }
+  return join(path, 'precompute');
+};
+
 const getAudfprintScript = (argv) => {
   const path = getAudfprintPath();
   const quotedDependencyPath = JSON.stringify(path);
@@ -263,6 +272,30 @@ ipcMain.on('openAudioDirectory', () => {
         maxCores: os.cpus().length,
         platform: process.platform,
       });
+    });
+  });
+});
+
+ipcMain.on('openAudioFile', () => {
+  dialog.showOpenDialog({
+    properties: ['openFile'],
+  }).then(({ filePaths }) => {
+    const [filename] = filePaths || [];
+    const winFilename = filename.replace(/\//g, '\\');
+    const sourceFilename = process.platform === 'win32' ? winFilename : filename;
+    const code = getAudfprintScript(['precompute', '-p', getPrecomputePath(), '-i', 4, sourceFilename]);
+    sendToMainWindow('pythonOutput', { line: 'Analyzing...' });
+    PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
+      if (!error) {
+        return;
+      }
+      sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
+    }).on('message', (message) => {
+      let error;
+      if (/Error/.test(message)) {
+        error = true;
+      }
+      sendToMainWindow('pythonOutput', { line: message, error });
     });
   });
 });

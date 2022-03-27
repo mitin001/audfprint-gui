@@ -12,8 +12,11 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import { Button } from '@mui/material';
 import { IoMdAddCircle } from 'react-icons/io';
+import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
+import PythonOutput from '../FingerprintPage/PythonOutput';
 import mainTheme from '../../theme';
 import { DrawerHeader, AppBar, Drawer } from '../../drawer';
 
@@ -78,6 +81,18 @@ export default function AppContent() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
+        <Box>
+          <Button
+            theme={theme}
+            variant="contained"
+            startIcon={<FaFileAudio size={25} />}
+            onKeyPress={() => window.ipc.send('openAudioFile')}
+            onClick={() => window.ipc.send('openAudioFile')}
+          >
+            Select audio file
+          </Button>
+          <PythonOutput />
+        </Box>
       </Box>
     </Box>
   );
