@@ -15,12 +15,9 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import { IoMdFingerPrint } from 'react-icons/io';
-import { CgReorder } from 'react-icons/cg';
+import { IoMdAddCircle } from 'react-icons/io';
 import ReactTooltip from 'react-tooltip';
-import mainTheme from './theme';
-import FingerprintPage from './scenes/FingerprintPage/FingerprintPage';
-import MatchPage from './scenes/MatchPage/MatchPage';
+import mainTheme from '../../theme';
 
 const drawerWidth = 240;
 
@@ -92,7 +89,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 export default function AppContent() {
   const theme = mainTheme;
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(<FingerprintPage />);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -112,7 +108,7 @@ export default function AppContent() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            Audio Fingerprinter
+            New Analysis
           </Typography>
         </Toolbar>
       </AppBar>
@@ -125,7 +121,6 @@ export default function AppContent() {
         <Divider />
         <List>
           <ListItemButton
-            onClick={() => setPage(<FingerprintPage />)}
             sx={{
               minHeight: 48,
               justifyContent: open ? 'initial' : 'center',
@@ -139,44 +134,19 @@ export default function AppContent() {
                 justifyContent: 'center',
               }}
             >
-              <IoMdFingerPrint
+              <IoMdAddCircle
                 data-delay-show="500"
-                data-tip="Fingerprint"
+                data-tip="New"
                 size={25}
               />
               <ReactTooltip />
             </ListItemIcon>
-            <ListItemText primary="Fingerprint" sx={{ opacity: open ? 1 : 0 }} />
-          </ListItemButton>
-          <ListItemButton
-            onClick={() => setPage(<MatchPage />)}
-            sx={{
-              minHeight: 48,
-              justifyContent: open ? 'initial' : 'center',
-              px: 2.5,
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: open ? 3 : 'auto',
-                justifyContent: 'center',
-              }}
-            >
-              <CgReorder
-                data-delay-show="500"
-                data-tip="Match"
-                size={25}
-              />
-              <ReactTooltip />
-            </ListItemIcon>
-            <ListItemText primary="Match" sx={{ opacity: open ? 1 : 0 }} />
+            <ListItemText primary="New" sx={{ opacity: open ? 1 : 0 }} />
           </ListItemButton>
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        {page}
       </Box>
     </Box>
   );
