@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -16,6 +16,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { IoMdFingerPrint } from 'react-icons/io';
+import { CgReorder } from 'react-icons/cg';
 import ReactTooltip from 'react-tooltip';
 import mainTheme from './theme';
 import FingerprintPage from './scenes/FingerprintPage/FingerprintPage';
@@ -89,15 +90,8 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 
 export default function AppContent() {
   const theme = mainTheme;
-  const [open, setOpen] = React.useState(false);
-
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(<FingerprintPage />);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -107,7 +101,7 @@ export default function AppContent() {
           <IconButton
             color="inherit"
             aria-label="open drawer"
-            onClick={handleDrawerOpen}
+            onClick={() => setOpen(true)}
             edge="start"
             sx={{
               marginRight: 5,
@@ -123,13 +117,14 @@ export default function AppContent() {
       </AppBar>
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
-          <IconButton onClick={handleDrawerClose}>
+          <IconButton onClick={() => setOpen(false)}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
         <Divider />
         <List>
           <ListItemButton
+            onClick={() => setPage(<FingerprintPage />)}
             sx={{
               minHeight: 48,
               justifyContent: open ? 'initial' : 'center',
@@ -152,11 +147,35 @@ export default function AppContent() {
             </ListItemIcon>
             <ListItemText primary="Fingerprint" sx={{ opacity: open ? 1 : 0 }} />
           </ListItemButton>
+          <ListItemButton
+            onClick={() => setPage(<div />)}
+            sx={{
+              minHeight: 48,
+              justifyContent: open ? 'initial' : 'center',
+              px: 2.5,
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: open ? 3 : 'auto',
+                justifyContent: 'center',
+              }}
+            >
+              <CgReorder
+                data-delay-show="500"
+                data-tip="Match"
+                size={25}
+              />
+              <ReactTooltip />
+            </ListItemIcon>
+            <ListItemText primary="Match" sx={{ opacity: open ? 1 : 0 }} />
+          </ListItemButton>
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        <FingerprintPage />
+        {page}
       </Box>
     </Box>
   );
