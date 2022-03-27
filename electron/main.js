@@ -171,6 +171,22 @@ const checkDependencies = (counter) => {
   });
 };
 
+const sendPythonOutput = (header, code) => {
+  sendToMainWindow('pythonOutput', { line: header });
+  PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
+    if (!error) {
+      return;
+    }
+    sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
+  }).on('message', (message) => {
+    let error;
+    if (/Error/.test(message)) {
+      error = true;
+    }
+    sendToMainWindow('pythonOutput', { line: message, error });
+  });
+};
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -284,19 +300,7 @@ ipcMain.on('openAudioFile', () => {
     const winFilename = filename.replace(/\//g, '\\');
     const sourceFilename = process.platform === 'win32' ? winFilename : filename;
     const code = getAudfprintScript(['precompute', '-p', getPrecomputePath(), '-i', 4, sourceFilename]);
-    sendToMainWindow('pythonOutput', { line: 'Analyzing...' });
-    PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
-      if (!error) {
-        return;
-      }
-      sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
-    }).on('message', (message) => {
-      let error;
-      if (/Error/.test(message)) {
-        error = true;
-      }
-      sendToMainWindow('pythonOutput', { line: message, error });
-    });
+    sendPythonOutput('Analyzing...', code);
   });
 });
 
@@ -311,20 +315,7 @@ ipcMain.on('storeDatabase', (event, options) => {
     const { ext } = parse(filePath) || {};
     const saveAs = ext ? filePath : `${filePath}.pklz`;
     const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', saveAs, ...filenames]);
-
-    sendToMainWindow('pythonOutput', { line: 'Fingerprinting...' });
-    PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
-      if (!error) {
-        return;
-      }
-      sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
-    }).on('message', (message) => {
-      let error;
-      if (/Error/.test(message)) {
-        error = true;
-      }
-      sendToMainWindow('pythonOutput', { line: message, error });
-    });
+    sendPythonOutput('Fingerprinting...', code);
   });
 });
 
