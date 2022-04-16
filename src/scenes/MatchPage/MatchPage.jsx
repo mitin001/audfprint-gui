@@ -18,6 +18,7 @@ import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from '../FingerprintPage/PythonOutput';
 import mainTheme from '../../theme';
+import InitialIcon from '../../InitialIcon';
 import { DrawerHeader, AppBar, Drawer } from '../../drawer';
 
 export default function AppContent() {
@@ -80,22 +81,7 @@ export default function AppContent() {
                     justifyContent: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      height: '25px',
-                      width: '25px',
-                      fontSize: '13px',
-                      lineHeight: '22px',
-                      borderRadius: '50%',
-                      display: 'inline-block',
-                      textAlign: 'center',
-                      color: 'white',
-                      backgroundColor: 'rgba(0, 0, 0, 0.54)',
-                      border: '2.5px solid white',
-                    }}
-                  >
-                    {`${basename[0]}`}
-                  </div>
+                  <InitialIcon text={basename} />
                 </ListItemIcon>
                 <ListItemText primary={basename} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>

@@ -17,6 +17,7 @@ import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import mainTheme from '../../theme';
 import { DrawerHeader, AppBar, Drawer } from '../../drawer';
+import InitialIcon from '../../InitialIcon';
 import ReviewAudioFiles from './ReviewAudioFiles';
 
 export default function FingerprintPage() {
@@ -79,22 +80,7 @@ export default function FingerprintPage() {
                     justifyContent: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      height: '25px',
-                      width: '25px',
-                      fontSize: '13px',
-                      lineHeight: '22px',
-                      borderRadius: '50%',
-                      display: 'inline-block',
-                      textAlign: 'center',
-                      color: 'white',
-                      backgroundColor: 'rgba(0, 0, 0, 0.54)',
-                      border: '2.5px solid white',
-                    }}
-                  >
-                    {`${basename[0]}`}
-                  </div>
+                  <InitialIcon text={basename} />
                 </ListItemIcon>
                 <ListItemText primary={basename} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>
