@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
@@ -23,6 +23,15 @@ import { DrawerHeader, AppBar, Drawer } from '../../drawer';
 export default function AppContent() {
   const theme = mainTheme;
   const [open, setOpen] = useState(false);
+  const [precomputeList, setPrecomputeList] = useState([]);
+
+  useEffect(() => {
+    window.ipc.send('listPrecompute');
+    window.ipc.on('precomputeListed', (event, data) => {
+      const { files = [] } = data || {};
+      setPrecomputeList(files);
+    });
+  }, []);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -54,6 +63,44 @@ export default function AppContent() {
         </DrawerHeader>
         <Divider />
         <List>
+          {
+            precomputeList.map(({ basename, fullname }) => (
+              <ListItemButton
+                key={fullname}
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '25px',
+                      width: '25px',
+                      fontSize: '13px',
+                      lineHeight: '22px',
+                      borderRadius: '50%',
+                      display: 'inline-block',
+                      textAlign: 'center',
+                      color: 'white',
+                      backgroundColor: 'rgba(0, 0, 0, 0.54)',
+                      border: '2.5px solid white',
+                    }}
+                  >
+                    {`${basename[0]}`}
+                  </div>
+                </ListItemIcon>
+                <ListItemText primary={basename} sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            ))
+          }
           <ListItemButton
             sx={{
               minHeight: 48,

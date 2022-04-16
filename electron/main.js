@@ -108,6 +108,22 @@ const getPythonLocation = (root, pyName) => new Promise((resolve) => {
   });
 });
 
+const listFiles = (root, substr) => new Promise((resolve) => {
+  const results = [];
+  const finder = find(root);
+  finder.on('file', (file) => {
+    if (file.indexOf(substr) !== -1) {
+      results.push({ basename: basename(file, '.afpt'), fullname: file });
+    }
+  });
+  finder.on('error', () => {
+    resolve(results);
+  });
+  finder.on('end', () => {
+    resolve(results);
+  });
+});
+
 const checkDependencies = (counter) => {
   const handlePythonError = async (error) => {
     if (process.platform === 'darwin') {
@@ -289,6 +305,12 @@ ipcMain.on('openAudioDirectory', () => {
         platform: process.platform,
       });
     });
+  });
+});
+
+ipcMain.on('listPrecompute', () => {
+  listFiles(getPrecomputePath(), '.afpt').then((files) => {
+    sendToMainWindow('precomputeListed', { files });
   });
 });
 
