@@ -5,7 +5,7 @@ const {
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
-const { existsSync, createWriteStream } = require('fs');
+const { existsSync, createWriteStream, readFileSync } = require('fs');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
@@ -328,6 +328,11 @@ ipcMain.on('listDatabases', () => {
   listFiles(getDatabasePath(), '.pklz').then((files) => {
     sendToMainWindow('databasesListed', { files });
   });
+});
+
+ipcMain.on('listDatabase', (event, { filename }) => {
+  const contents = readFileSync(filename.replace(/\.pklz$/, '.txt'), 'utf-8');
+  sendToMainWindow('pythonOutput', { line: contents });
 });
 
 ipcMain.on('openAudioFile', () => {

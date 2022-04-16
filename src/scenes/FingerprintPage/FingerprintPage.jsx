@@ -19,11 +19,14 @@ import mainTheme from '../../theme';
 import { DrawerHeader, AppBar, Drawer } from '../../drawer';
 import InitialIcon from '../../InitialIcon';
 import ReviewAudioFiles from './ReviewAudioFiles';
+import ListDatabase from './ListDatabase';
 
 export default function FingerprintPage() {
   const theme = mainTheme;
   const [open, setOpen] = useState(false);
   const [databaseList, setDatabaseList] = useState([]);
+  const [selectedDatabase, selectDatabase] = useState({});
+  const { fullname: selectedDbFullname, basename: selectedDbName } = selectedDatabase || {};
 
   useEffect(() => {
     window.ipc.send('listDatabases');
@@ -51,7 +54,7 @@ export default function FingerprintPage() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            New Fingerprint Database
+            {selectedDbName || 'New Fingerprint Database'}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -72,6 +75,7 @@ export default function FingerprintPage() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
+                onClick={() => selectDatabase({ basename, fullname })}
               >
                 <ListItemIcon
                   sx={{
@@ -92,6 +96,7 @@ export default function FingerprintPage() {
               justifyContent: open ? 'initial' : 'center',
               px: 2.5,
             }}
+            onClick={() => selectDatabase(null)}
           >
             <ListItemIcon
               sx={{
@@ -113,18 +118,24 @@ export default function FingerprintPage() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        <Box>
-          <Button
-            theme={theme}
-            variant="contained"
-            startIcon={<FaFileAudio size={25} />}
-            onKeyPress={() => window.ipc.send('openAudioDirectory')}
-            onClick={() => window.ipc.send('openAudioDirectory')}
-          >
-            Select directory with audio files
-          </Button>
-          <ReviewAudioFiles />
-        </Box>
+        {
+          selectedDbFullname
+            ? <ListDatabase filename={selectedDbFullname} />
+            : (
+              <Box>
+                <Button
+                  theme={theme}
+                  variant="contained"
+                  startIcon={<FaFileAudio size={25} />}
+                  onKeyPress={() => window.ipc.send('openAudioDirectory')}
+                  onClick={() => window.ipc.send('openAudioDirectory')}
+                >
+                  Select directory with audio files
+                </Button>
+                <ReviewAudioFiles />
+              </Box>
+            )
+        }
       </Box>
     </Box>
   );
