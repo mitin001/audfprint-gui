@@ -117,12 +117,12 @@ const getPythonLocation = (root, pyName) => new Promise((resolve) => {
   });
 });
 
-const listFiles = (root, substr) => new Promise((resolve) => {
+const listFiles = (root, ext) => new Promise((resolve) => {
   const results = [];
   const finder = find(root);
   finder.on('file', (file) => {
-    if (file.indexOf(substr) !== -1) {
-      results.push({ basename: basename(file, '.afpt'), fullname: file });
+    if (file.indexOf(ext) !== -1) {
+      results.push({ basename: basename(file, ext), fullname: file });
     }
   });
   finder.on('error', () => {
@@ -321,6 +321,12 @@ ipcMain.on('openAudioDirectory', () => {
 ipcMain.on('listPrecompute', () => {
   listFiles(getPrecomputePath(), '.afpt').then((files) => {
     sendToMainWindow('precomputeListed', { files });
+  });
+});
+
+ipcMain.on('listDatabases', () => {
+  listFiles(getDatabasePath(), '.pklz').then((files) => {
+    sendToMainWindow('databasesListed', { files });
   });
 });
 
