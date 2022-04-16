@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function InitialIcon(props) {
-  const { text } = props || {};
+  const { text, borderStyle = 'inset' } = props || {};
   return (
     <div
       style={{
@@ -14,7 +14,9 @@ export default function InitialIcon(props) {
         textAlign: 'center',
         color: 'white',
         backgroundColor: 'rgba(0, 0, 0, 0.54)',
-        border: '2.5px solid white',
+        borderWidth: '2.5px',
+        borderColor: 'white',
+        borderStyle,
       }}
     >
       {`${text[0]}`}

@@ -81,7 +81,7 @@ export default function AppContent() {
                     justifyContent: 'center',
                   }}
                 >
-                  <InitialIcon text={basename} />
+                  <InitialIcon text={basename} borderStyle="outset" />
                 </ListItemIcon>
                 <ListItemText primary={basename} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>
