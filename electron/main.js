@@ -5,7 +5,7 @@ const {
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
-const { existsSync } = require('fs');
+const { existsSync, createWriteStream } = require('fs');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
@@ -52,6 +52,15 @@ const getPrecomputePath = () => {
     return join(pathUnpacked, 'precompute');
   }
   return join(path, 'precompute');
+};
+
+const getDatabasePath = () => {
+  const path = app.getAppPath();
+  const pathUnpacked = `${path}.unpacked`;
+  if (existsSync(pathUnpacked)) {
+    return join(pathUnpacked, 'databases');
+  }
+  return join(path, 'databases');
 };
 
 const getAudfprintScript = (argv) => {
@@ -187,13 +196,14 @@ const checkDependencies = (counter) => {
   });
 };
 
-const sendPythonOutput = (header, code) => {
+const sendPythonOutput = (header, code) => new Promise((resolve) => {
   sendToMainWindow('pythonOutput', { line: header });
   PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
     if (!error) {
-      return;
+      return resolve();
     }
     sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
+    return resolve();
   }).on('message', (message) => {
     let error;
     if (/Error/.test(message)) {
@@ -201,7 +211,7 @@ const sendPythonOutput = (header, code) => {
     }
     sendToMainWindow('pythonOutput', { line: message, error });
   });
-};
+});
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -317,27 +327,34 @@ ipcMain.on('listPrecompute', () => {
 ipcMain.on('openAudioFile', () => {
   dialog.showOpenDialog({
     properties: ['openFile'],
-  }).then(({ filePaths }) => {
+  }).then(async ({ filePaths }) => {
     const [filename] = filePaths || [];
     const winFilename = filename.replace(/\//g, '\\');
     const sourceFilename = process.platform === 'win32' ? winFilename : filename;
     const code = getAudfprintScript(['precompute', '-p', getPrecomputePath(), '-i', 4, sourceFilename]);
-    sendPythonOutput('Analyzing...', code);
+    await sendPythonOutput('Analyzing...', code);
   });
 });
 
-ipcMain.on('storeDatabase', (event, options) => {
+ipcMain.on('storeDatabase', async (event, options) => {
   const { root, filenames, cores } = options || {};
   const { base: defaultPath } = parse(root) || {};
+  const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
+  const listPath = join(getDatabasePath(), `${defaultPath}.txt`);
+  const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+  await sendPythonOutput('Fingerprinting...', code);
 
-  dialog.showSaveDialog({ defaultPath }).then(({ filePath, canceled }) => {
-    if (canceled) {
-      return;
+  const listCode = getAudfprintScript(['list', '-d', dbPath]);
+  PythonShell.runString(listCode, { pythonPath }, (error, output) => {
+    const file = createWriteStream(listPath);
+    if (error) {
+      file.write(error.toString());
+    } else {
+      output.forEach((line) => {
+        file.write(`${line}\n`);
+      });
     }
-    const { ext } = parse(filePath) || {};
-    const saveAs = ext ? filePath : `${filePath}.pklz`;
-    const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', saveAs, ...filenames]);
-    sendPythonOutput('Fingerprinting...', code);
+    file.end();
   });
 });
 
