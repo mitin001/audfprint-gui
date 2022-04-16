@@ -9,6 +9,7 @@ export default function PythonOutput() {
     window.ipc.on('pythonOutput', (event, line) => {
       setNewLine(line);
     });
+    return () => window.ipc.removeAllListeners('pythonOutput');
   }, []);
 
   useEffect(() => {

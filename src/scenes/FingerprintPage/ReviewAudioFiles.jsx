@@ -26,6 +26,7 @@ export default function ReviewAudioFiles() {
     window.ipc.on('audioDirectoryOpened', (event, data) => {
       setSystemData(data);
     });
+    return () => window.ipc.removeAllListeners('audioDirectoryOpened');
   }, []);
 
   if (!root) {

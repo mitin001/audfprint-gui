@@ -28,7 +28,7 @@ export default function AppContent() {
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
-    window.ipc.on('precomputeListed', (event, data) => {
+    window.ipc.once('precomputeListed', (event, data) => {
       const { files = [] } = data || {};
       setPrecomputeList(files);
     });

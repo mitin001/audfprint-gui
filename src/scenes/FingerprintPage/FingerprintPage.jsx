@@ -27,7 +27,7 @@ export default function FingerprintPage() {
 
   useEffect(() => {
     window.ipc.send('listDatabases');
-    window.ipc.on('databasesListed', (event, data) => {
+    window.ipc.once('databasesListed', (event, data) => {
       const { files = [] } = data || {};
       setDatabaseList(files);
     });
