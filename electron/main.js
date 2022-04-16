@@ -5,7 +5,9 @@ const {
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
-const { existsSync, createWriteStream, readFile } = require('fs');
+const {
+  existsSync, createWriteStream, readFile, writeFile,
+} = require('fs');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
@@ -198,12 +200,12 @@ const checkDependencies = (counter) => {
 
 const sendPythonOutput = (header, code) => new Promise((resolve) => {
   sendToMainWindow('pythonOutput', { line: header });
-  PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error) => {
+  PythonShell.runString(code, { pythonOptions: ['-u'], pythonPath }, (error, output) => {
     if (!error) {
-      return resolve();
+      return resolve(output);
     }
     sendToMainWindow('pythonOutput', { line: error.toString(), error: true });
-    return resolve();
+    return resolve(output);
   }).on('message', (message) => {
     let error;
     if (/Error/.test(message)) {
@@ -347,7 +349,16 @@ ipcMain.on('openAudioFile', () => {
     const winFilename = filename.replace(/\//g, '\\');
     const sourceFilename = process.platform === 'win32' ? winFilename : filename;
     const code = getAudfprintScript(['precompute', '-p', getPrecomputePath(), '-i', 4, sourceFilename]);
-    await sendPythonOutput('Analyzing...', code);
+    const lines = await sendPythonOutput('Analyzing...', code);
+
+    let precomputePath = '';
+    lines.forEach((line) => {
+      if (!precomputePath) {
+        ([, precomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
+      }
+    });
+    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
+    writeFile(jsonPath, JSON.stringify({ precompute: lines }), () => {});
   });
 });
 
