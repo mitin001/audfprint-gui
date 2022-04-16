@@ -344,16 +344,15 @@ ipcMain.on('listDatabase', (event, { filename }) => {
 ipcMain.on('listMatches', (event, { filename }) => {
   readFile(filename.replace(/\.afpt$/, '.json'), 'utf-8', (error, contents) => {
     if (error) {
-      sendToMainWindow('pythonOutput', { line: error.toString() });
+      sendToMainWindow('matchesListed', { error: error.toString() });
     }
-    const analysis = JSON.parse(contents.toString());
-    const { matchesByDatabase } = analysis || {};
-    Object.keys(matchesByDatabase).forEach((dbName) => {
-      sendToMainWindow('pythonOutput', { line: dbName });
-      matchesByDatabase[dbName].forEach((line) => {
-        sendToMainWindow('pythonOutput', { line });
-      });
-    });
+    try {
+      const analysis = JSON.parse(contents.toString());
+      const { parsedMatchesByDatabase } = analysis || {};
+      sendToMainWindow('matchesListed', { parsedMatchesByDatabase });
+    } catch (e) {
+      sendToMainWindow('matchesListed', { error: e.toString() });
+    }
   });
 });
 
@@ -375,7 +374,7 @@ ipcMain.on('openAudioFile', () => {
     });
 
     const matchesByDatabase = {};
-    const parsedMatchesByDatabases = {};
+    const parsedMatchesByDatabase = {};
     const files = await listFiles(getDatabasePath(), '.pklz');
     await Promise.all(files.map(async ({ fullname: dbPath, basename: dbName }) => {
       const matchCode = getAudfprintScript(['match', '-d', dbPath, precomputePath, '-R']);
@@ -387,7 +386,7 @@ ipcMain.on('openAudioFile', () => {
           matchDuration, matchStartInQuery, matchStartInFingerprint, commonHashNumerator, commonHashDenominator, rank,
         ] = line.match(/^Matched (.+) starting at (.+) in .+ to time (.+) in .+ with (.+) of (.+) common hashes at rank (.+)$/) || [];
         if (isMatch) {
-          parsedMatchesByDatabases[dbName] = {
+          parsedMatchesByDatabase[dbName] = {
             matchDuration: matchDuration.trim(),
             matchStartInQuery: matchStartInQuery.trim(),
             matchStartInFingerprint: matchStartInFingerprint.trim(),
@@ -400,7 +399,7 @@ ipcMain.on('openAudioFile', () => {
     }));
 
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase, parsedMatchesByDatabases }), () => {});
+    writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase, parsedMatchesByDatabase }), () => {});
   });
 });
 
