@@ -121,7 +121,7 @@ export default function AppContent() {
         <DrawerHeader />
         {
           selectedAnalysisFullname
-            ? <ListMatches filename={selectedAnalysisFullname} />
+            ? <ListMatches filename={selectedAnalysisFullname} name={selectedAnalysisName} />
             : (
               <Box>
                 <Button

@@ -383,13 +383,15 @@ ipcMain.on('openAudioFile', () => {
       matchLines.forEach((line) => {
         const [
           isMatch,
-          matchDuration, matchStartInQuery, matchStartInFingerprint, commonHashNumerator, commonHashDenominator, rank,
-        ] = line.match(/^Matched (.+) starting at (.+) in .+ to time (.+) in .+ with (.+) of (.+) common hashes at rank (.+)$/) || [];
+          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
+          commonHashNumerator, commonHashDenominator, rank,
+        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
         if (isMatch) {
           parsedMatchesByDatabase[dbName] = {
             matchDuration: matchDuration.trim(),
             matchStartInQuery: matchStartInQuery.trim(),
             matchStartInFingerprint: matchStartInFingerprint.trim(),
+            matchFilename: matchFilename.trim(),
             commonHashNumerator: commonHashNumerator.trim(),
             commonHashDenominator: commonHashDenominator.trim(),
             rank: rank.trim(),
