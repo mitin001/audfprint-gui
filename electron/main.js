@@ -341,6 +341,22 @@ ipcMain.on('listDatabase', (event, { filename }) => {
   });
 });
 
+ipcMain.on('listMatches', (event, { filename }) => {
+  readFile(filename.replace(/\.afpt$/, '.json'), 'utf-8', (error, contents) => {
+    if (error) {
+      sendToMainWindow('pythonOutput', { line: error.toString() });
+    }
+    const analysis = JSON.parse(contents.toString());
+    const { matchesByDatabase } = analysis || {};
+    Object.keys(matchesByDatabase).forEach((dbName) => {
+      sendToMainWindow('pythonOutput', { line: dbName });
+      matchesByDatabase[dbName].forEach((line) => {
+        sendToMainWindow('pythonOutput', { line });
+      });
+    });
+  });
+});
+
 ipcMain.on('openAudioFile', () => {
   dialog.showOpenDialog({
     properties: ['openFile'],

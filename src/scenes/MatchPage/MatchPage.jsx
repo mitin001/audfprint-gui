@@ -17,6 +17,7 @@ import { IoMdAddCircle } from 'react-icons/io';
 import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from '../FingerprintPage/PythonOutput';
+import ListMatches from './ListMatches';
 import mainTheme from '../../theme';
 import InitialIcon from '../../InitialIcon';
 import { DrawerHeader, AppBar, Drawer } from '../../drawer';
@@ -25,6 +26,8 @@ export default function AppContent() {
   const theme = mainTheme;
   const [open, setOpen] = useState(false);
   const [precomputeList, setPrecomputeList] = useState([]);
+  const [selectedAnalysis, selectAnalysis] = useState({});
+  const { fullname: selectedAnalysisFullname, basename: selectedAnalysisName } = selectedAnalysis || {};
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
@@ -52,7 +55,7 @@ export default function AppContent() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            New Analysis
+            {selectedAnalysisName || 'New Analysis'}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -73,6 +76,7 @@ export default function AppContent() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
+                onClick={() => selectAnalysis({ basename, fullname })}
               >
                 <ListItemIcon
                   sx={{
@@ -93,6 +97,7 @@ export default function AppContent() {
               justifyContent: open ? 'initial' : 'center',
               px: 2.5,
             }}
+            onClick={() => selectAnalysis(null)}
           >
             <ListItemIcon
               sx={{
@@ -114,18 +119,24 @@ export default function AppContent() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        <Box>
-          <Button
-            theme={theme}
-            variant="contained"
-            startIcon={<FaFileAudio size={25} />}
-            onKeyPress={() => window.ipc.send('openAudioFile')}
-            onClick={() => window.ipc.send('openAudioFile')}
-          >
-            Select audio file
-          </Button>
-          <PythonOutput />
-        </Box>
+        {
+          selectedAnalysisFullname
+            ? <ListMatches filename={selectedAnalysisFullname} />
+            : (
+              <Box>
+                <Button
+                  theme={theme}
+                  variant="contained"
+                  startIcon={<FaFileAudio size={25} />}
+                  onKeyPress={() => window.ipc.send('openAudioFile')}
+                  onClick={() => window.ipc.send('openAudioFile')}
+                >
+                  Select audio file
+                </Button>
+                <PythonOutput />
+              </Box>
+            )
+        }
       </Box>
     </Box>
   );
