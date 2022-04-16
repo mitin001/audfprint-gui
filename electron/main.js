@@ -357,8 +357,16 @@ ipcMain.on('openAudioFile', () => {
         ([, precomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
       }
     });
+
+    const matchesByDatabase = {};
+    const files = await listFiles(getDatabasePath(), '.pklz');
+    await Promise.all(files.map(async ({ fullname: dbPath, basename: dbName }) => {
+      const matchCode = getAudfprintScript(['match', '-d', dbPath, precomputePath, '-R']);
+      matchesByDatabase[dbName] = await sendPythonOutput('Matching...', matchCode);
+    }));
+
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    writeFile(jsonPath, JSON.stringify({ precompute: lines }), () => {});
+    writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase }), () => {});
   });
 });
 
