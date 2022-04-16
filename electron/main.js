@@ -375,14 +375,32 @@ ipcMain.on('openAudioFile', () => {
     });
 
     const matchesByDatabase = {};
+    const parsedMatchesByDatabases = {};
     const files = await listFiles(getDatabasePath(), '.pklz');
     await Promise.all(files.map(async ({ fullname: dbPath, basename: dbName }) => {
       const matchCode = getAudfprintScript(['match', '-d', dbPath, precomputePath, '-R']);
-      matchesByDatabase[dbName] = await sendPythonOutput('Matching...', matchCode);
+      const matchLines = await sendPythonOutput('Matching...', matchCode);
+      matchesByDatabase[dbName] = matchLines;
+      matchLines.forEach((line) => {
+        const [
+          isMatch,
+          matchDuration, matchStartInQuery, matchStartInFingerprint, commonHashNumerator, commonHashDenominator, rank,
+        ] = line.match(/^Matched (.+) starting at (.+) in .+ to time (.+) in .+ with (.+) of (.+) common hashes at rank (.+)$/) || [];
+        if (isMatch) {
+          parsedMatchesByDatabases[dbName] = {
+            matchDuration: matchDuration.trim(),
+            matchStartInQuery: matchStartInQuery.trim(),
+            matchStartInFingerprint: matchStartInFingerprint.trim(),
+            commonHashNumerator: commonHashNumerator.trim(),
+            commonHashDenominator: commonHashDenominator.trim(),
+            rank: rank.trim(),
+          };
+        }
+      });
     }));
 
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase }), () => {});
+    writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase, parsedMatchesByDatabases }), () => {});
   });
 });
 
