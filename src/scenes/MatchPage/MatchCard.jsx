@@ -29,6 +29,8 @@ export default function MatchCard(props) {
         <Divider textAlign="left">≈</Divider>
         {`${getHhmmss(matchStartInFingerprintFloat)}-${getHhmmss(matchStartInFingerprintFloat + matchDurationFloat)} ${matchFilename}`}
         <Typography sx={{ mt: 1 }} color="text.secondary" variant="body2">
+          {`Match duration: ${matchDuration} s`}
+          <br />
           {`Common hashes: ${commonHashNumerator}/${commonHashDenominator}`}
           <br />
           {`Database: ${database}`}
