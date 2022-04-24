@@ -25,9 +25,12 @@ export default function MatchCard(props) {
   return (
     <Card>
       <CardContent>
-        {`${getHhmmss(matchStartInQueryFloat)}-${getHhmmss(matchStartInQueryFloat + matchDurationFloat)} ${name}`}
-        <Divider textAlign="left">≈</Divider>
-        {`${getHhmmss(matchStartInFingerprintFloat)}-${getHhmmss(matchStartInFingerprintFloat + matchDurationFloat)} ${matchFilename}`}
+        <pre>
+          {`${getHhmmss(matchStartInQueryFloat)} - ${getHhmmss(matchStartInQueryFloat + matchDurationFloat)} ${name}\n`}
+          {'         ≈\n'}
+          {`${getHhmmss(matchStartInFingerprintFloat)} - ${getHhmmss(matchStartInFingerprintFloat + matchDurationFloat)} ${matchFilename}`}
+        </pre>
+        <Divider />
         <Typography sx={{ mt: 1 }} color="text.secondary" variant="body2">
           {`Match duration: ${matchDuration} s`}
           <br />
