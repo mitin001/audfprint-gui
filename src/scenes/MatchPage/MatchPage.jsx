@@ -27,7 +27,8 @@ export default function AppContent() {
   const [open, setOpen] = useState(false);
   const [precomputeList, setPrecomputeList] = useState([]);
   const [selectedAnalysis, selectAnalysis] = useState({});
-  const { fullname: selectedAnalysisFullname, basename: selectedAnalysisName } = selectedAnalysis || {};
+  const [matchData, setMatchData] = useState({ parsedMatchesByDatabase: [] });
+  const { basename: selectedAnalysisName } = selectedAnalysis || {};
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
@@ -35,7 +36,14 @@ export default function AppContent() {
       const { files = [] } = data || {};
       setPrecomputeList(files);
     });
-    return () => window.ipc.removeAllListeners('precomputeListed');
+    window.ipc.on('matchesListed', (event, data) => {
+      const { error: incomingError, parsedMatchesByDatabase: incomingParsedMatchesByDatabase = [] } = data || {};
+      setMatchData({ error: incomingError, parsedMatchesByDatabase: incomingParsedMatchesByDatabase });
+    });
+    return () => {
+      window.ipc.removeAllListeners('precomputeListed');
+      window.ipc.removeAllListeners('matchesListed');
+    };
   }, []);
 
   return (
@@ -77,7 +85,10 @@ export default function AppContent() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
-                onClick={() => selectAnalysis({ basename, fullname })}
+                onClick={() => {
+                  window.ipc.send('listMatches', { filename: fullname });
+                  selectAnalysis({ basename, fullname });
+                }}
               >
                 <ListItemIcon
                   sx={{
@@ -121,8 +132,8 @@ export default function AppContent() {
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
         {
-          selectedAnalysisFullname
-            ? <ListMatches filename={selectedAnalysisFullname} name={selectedAnalysisName} />
+          selectedAnalysisName
+            ? <ListMatches name={selectedAnalysisName} matchData={matchData} />
             : (
               <Box>
                 <Button
