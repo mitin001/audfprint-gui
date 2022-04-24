@@ -375,8 +375,8 @@ ipcMain.on('openAudioFile', () => {
 
     const matchesByDatabase = {};
     const parsedMatchesByDatabase = {};
-    const files = await listFiles(getDatabasePath(), '.pklz');
-    await Promise.all(files.map(async ({ fullname: dbPath, basename: dbName }) => {
+    const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+    await Promise.all(dbFiles.map(async ({ fullname: dbPath, basename: dbName }) => {
       const matchCode = getAudfprintScript(['match', '-d', dbPath, precomputePath, '-R']);
       const matchLines = await sendPythonOutput('Matching...', matchCode);
       matchesByDatabase[dbName] = matchLines;
@@ -402,6 +402,10 @@ ipcMain.on('openAudioFile', () => {
 
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
     writeFile(jsonPath, JSON.stringify({ precompute: lines, matchesByDatabase, parsedMatchesByDatabase }), () => {});
+
+    listFiles(getPrecomputePath(), '.afpt').then((files) => {
+      sendToMainWindow('precomputeListed', { files });
+    });
   });
 });
 

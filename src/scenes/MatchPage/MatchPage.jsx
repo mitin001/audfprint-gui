@@ -31,10 +31,11 @@ export default function AppContent() {
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
-    window.ipc.once('precomputeListed', (event, data) => {
+    window.ipc.on('precomputeListed', (event, data) => {
       const { files = [] } = data || {};
       setPrecomputeList(files);
     });
+    return () => window.ipc.removeAllListeners('precomputeListed');
   }, []);
 
   return (
