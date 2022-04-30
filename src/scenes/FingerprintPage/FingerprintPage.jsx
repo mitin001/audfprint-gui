@@ -76,7 +76,10 @@ export default function FingerprintPage() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
-                onClick={() => selectDatabase({ basename, fullname })}
+                onClick={() => {
+                  window.ipc.send('listDatabase', { filename: fullname });
+                  selectDatabase({ basename, fullname });
+                }}
               >
                 <ListItemIcon
                   sx={{
@@ -121,7 +124,7 @@ export default function FingerprintPage() {
         <DrawerHeader />
         {
           selectedDbFullname
-            ? <ListDatabase filename={selectedDbFullname} />
+            ? <ListDatabase timestamp={new Date().valueOf()} />
             : (
               <Box>
                 <Button
