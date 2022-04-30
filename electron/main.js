@@ -465,6 +465,9 @@ ipcMain.on('storeDatabase', async (event, options) => {
       }
     });
   }));
+  listFiles(getDatabasePath(), '.pklz').then((files) => {
+    sendToMainWindow('databasesListed', { files });
+  });
 });
 
 ipcMain.on('checkDependencies', () => checkDependencies());

@@ -30,10 +30,11 @@ export default function FingerprintPage() {
 
   useEffect(() => {
     window.ipc.send('listDatabases');
-    window.ipc.once('databasesListed', (event, data) => {
+    window.ipc.on('databasesListed', (event, data) => {
       const { files = [] } = data || {};
       setDatabaseList(files);
     });
+    return () => window.ipc.removeAllListeners('databasesListed');
   }, []);
 
   return (
