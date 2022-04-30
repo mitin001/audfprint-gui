@@ -145,7 +145,7 @@ export default function AppContent() {
                 >
                   Select audio file
                 </Button>
-                <PythonOutput />
+                <PythonOutput timestamp={new Date().valueOf()} />
               </Box>
             )
         }

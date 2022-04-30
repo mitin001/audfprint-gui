@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
 
-export default function PythonOutput() {
+export default function PythonOutput(props) {
+  const { timestamp } = props || {};
   const [newLine, setNewLine] = useState({});
   const [lines, setLines] = useState([]);
 
@@ -24,7 +25,7 @@ export default function PythonOutput() {
         lines.map(({ line, error }) => (
           <pre
             style={{ margin: 0, color: error ? 'red' : 'black', fontWeight: error ? 'bold' : 'normal' }}
-            key={line}
+            key={timestamp + line}
           >
             {line}
           </pre>
