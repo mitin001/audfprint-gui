@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Divider, Card, CardContent, Typography,
+  Card, CardContent, Typography,
 } from '@mui/material';
 
 function getHhmmss(s) {
@@ -25,20 +25,26 @@ export default function MatchCard(props) {
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent>
+        <Typography component="div" variant="h6">
+          <span>Database: </span>
+          <strong>{database}</strong>
+        </Typography>
         <pre>
-          {`${getHhmmss(matchStartInQueryFloat)} - ${getHhmmss(matchStartInQueryFloat + matchDurationFloat)} ${name}\n`}
-          {'         ≈\n'}
-          {`${getHhmmss(matchStartInFingerprintFloat)} - ${getHhmmss(matchStartInFingerprintFloat + matchDurationFloat)} ${matchFilename}`}
+          <span>{`┌ ${getHhmmss(matchStartInQueryFloat)} - ${getHhmmss(matchStartInQueryFloat + matchDurationFloat)} `}</span>
+          <strong>{name}</strong>
+          <br />
+          <span>{`└ ${getHhmmss(matchStartInFingerprintFloat)} - ${getHhmmss(matchStartInFingerprintFloat + matchDurationFloat)} `}</span>
+          <strong>{matchFilename}</strong>
         </pre>
-        <Divider />
         <Typography sx={{ mt: 1 }} color="text.secondary" variant="body2">
-          {`Match duration: ${matchDuration} s`}
+          <span>Match duration: </span>
+          <strong>{`${matchDuration} s`}</strong>
           <br />
-          {`Common hashes: ${commonHashNumerator}/${commonHashDenominator}`}
+          <span>Common hashes: </span>
+          <strong>{`${commonHashNumerator}/${commonHashDenominator}`}</strong>
           <br />
-          {`Database: ${database}`}
-          <br />
-          {`Rank: ${rank}`}
+          <span>Rank: </span>
+          <strong>{rank}</strong>
         </Typography>
       </CardContent>
     </Card>
