@@ -49,7 +49,7 @@ const getAudfprintPath = () => {
 };
 
 const getPrecomputePath = () => {
-  const path = app.getAppPath();
+  const path = app.getPath('userData');
   const pathUnpacked = `${path}.unpacked`;
   if (existsSync(pathUnpacked)) {
     return join(pathUnpacked, 'precompute');
@@ -58,7 +58,7 @@ const getPrecomputePath = () => {
 };
 
 const getDatabasePath = () => {
-  const path = app.getAppPath();
+  const path = app.getPath('userData');
   const pathUnpacked = `${path}.unpacked`;
   if (existsSync(pathUnpacked)) {
     return join(pathUnpacked, 'databases');
