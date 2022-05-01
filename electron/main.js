@@ -363,7 +363,11 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
     title: 'Export database',
   }) || {};
   if (!canceled) {
-    cp.sync(filename, filePath);
+    try {
+      cp.sync(filename, filePath);
+    } catch (e) {
+      // ignore copy error
+    }
   }
   const txtFilename = filename.replace(/\.pklz$/, '.txt');
   const { filePath: txtFilePath, canceled: txtCanceled } = await dialog.showSaveDialog({
@@ -371,7 +375,11 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
     title: 'Export database metadata',
   }) || {};
   if (!txtCanceled) {
-    cp.sync(txtFilename, txtFilePath);
+    try {
+      cp.sync(txtFilename, txtFilePath);
+    } catch (e) {
+      // ignore copy error
+    }
   }
   if (!canceled) {
     const { response } = await dialog.showMessageBox({
@@ -379,7 +387,11 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
       buttons: ['Remove', 'Keep'],
     }) || {};
     if (response === 0) { // remove
-      await Promise.all([rm(filename), rm(txtFilename)]);
+      try {
+        await Promise.all([rm(filename), rm(txtFilename)]);
+      } catch (e) {
+        // ignore remove error
+      }
       listFiles(getDatabasePath(), '.pklz').then((files) => {
         sendToMainWindow('databasesListed', { files });
       });
@@ -393,7 +405,11 @@ ipcMain.on('exportAnalysis', async (event, { filename }) => {
     title: 'Export analysis',
   }) || {};
   if (!canceled) {
-    cp.sync(filename, filePath);
+    try {
+      cp.sync(filename, filePath);
+    } catch (e) {
+      // ignore copy error
+    }
   }
   const jsonFilename = filename.replace(/\.afpt$/, '.json');
   const { filePath: jsonFilePath, canceled: jsonCanceled } = await dialog.showSaveDialog({
@@ -401,7 +417,11 @@ ipcMain.on('exportAnalysis', async (event, { filename }) => {
     title: 'Export analysis metadata',
   }) || {};
   if (!jsonCanceled) {
-    cp.sync(jsonFilename, jsonFilePath);
+    try {
+      cp.sync(jsonFilename, jsonFilePath);
+    } catch (e) {
+      // ignore copy error
+    }
   }
   if (!canceled) {
     const { response } = await dialog.showMessageBox({
@@ -409,7 +429,11 @@ ipcMain.on('exportAnalysis', async (event, { filename }) => {
       buttons: ['Remove', 'Keep'],
     }) || {};
     if (response === 0) { // remove
-      await Promise.all([rm(filename), rm(jsonFilename)]);
+      try {
+        await Promise.all([rm(filename), rm(jsonFilename)]);
+      } catch (e) {
+        // ignore remove error
+      }
       listFiles(getPrecomputePath(), '.afpt').then((files) => {
         sendToMainWindow('precomputeListed', { files });
       });
