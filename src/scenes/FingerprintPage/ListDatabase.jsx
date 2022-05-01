@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { CgExport } from 'react-icons/cg';
+import theme from '../../theme';
 
 export default function ListDatabase(props) {
-  const { timestamp } = props || {};
+  const { filename, timestamp } = props || {};
   const [newLine, setNewLine] = useState({});
   const [lines, setLines] = useState([]);
 
@@ -25,7 +27,17 @@ export default function ListDatabase(props) {
   }, [newLine]);
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box>
+      <Button
+        sx={{ mb: 2 }}
+        theme={theme}
+        variant="contained"
+        startIcon={<CgExport size={25} />}
+        onKeyPress={() => window.ipc.send('exportDatabase', { filename })}
+        onClick={() => window.ipc.send('exportDatabase', { filename })}
+      >
+        Export database
+      </Button>
       {
         lines.map(({ line, error }) => (
           <pre

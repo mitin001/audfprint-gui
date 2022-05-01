@@ -12,6 +12,7 @@ const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
 const find = require('findit');
+const cp = require('cp');
 const { PythonShell } = require('python-shell');
 const openAboutWindow = require('about-window').default;
 const { createAppWindow, isMainWindowDefined, sendToMainWindow } = require('./main/app-process');
@@ -354,6 +355,24 @@ ipcMain.on('listMatches', (event, { filename }) => {
       sendToMainWindow('matchesListed', { error: e.toString() });
     }
   });
+});
+
+ipcMain.on('exportDatabase', async (event, { filename }) => {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    defaultPath: basename(filename),
+    title: 'Export database',
+  }) || {};
+  if (!canceled) {
+    cp.sync(filename, filePath);
+  }
+  const txtFilename = filename.replace(/\.pklz$/, '.txt');
+  const { filePath: txtFilePath, canceled: txtCanceled } = await dialog.showSaveDialog({
+    defaultPath: basename(txtFilename),
+    title: 'Export database metadata',
+  }) || {};
+  if (!txtCanceled) {
+    cp.sync(txtFilename, txtFilePath);
+  }
 });
 
 ipcMain.on('openAudioFile', () => {
