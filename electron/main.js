@@ -6,7 +6,7 @@ const {
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
 const {
-  existsSync, createWriteStream, readFile, writeFile,
+  existsSync, createWriteStream, readFile, writeFile, promises: { rm },
 } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -372,6 +372,18 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
   }) || {};
   if (!txtCanceled) {
     cp.sync(txtFilename, txtFilePath);
+  }
+  if (!canceled) {
+    const { response } = await dialog.showMessageBox({
+      message: 'Remove the database from Fingerprinter after exporting?',
+      buttons: ['Remove', 'Keep'],
+    }) || {};
+    if (response === 0) { // remove
+      await Promise.all([rm(filename), rm(txtFilename)]);
+      listFiles(getDatabasePath(), '.pklz').then((files) => {
+        sendToMainWindow('databasesListed', { files });
+      });
+    }
   }
 });
 

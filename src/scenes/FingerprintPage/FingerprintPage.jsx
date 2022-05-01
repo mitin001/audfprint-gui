@@ -37,6 +37,11 @@ export default function FingerprintPage() {
     return () => window.ipc.removeAllListeners('databasesListed');
   }, []);
 
+  // clear selected database when the database list is updated
+  useEffect(() => {
+    selectDatabase({});
+  }, [databaseList]);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
