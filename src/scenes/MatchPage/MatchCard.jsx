@@ -23,7 +23,7 @@ export default function MatchCard(props) {
   const matchDurationFloat = parseFloat(matchDuration);
 
   return (
-    <Card sx={{ m: 1 }}>
+    <Card sx={{ mb: 3 }}>
       <CardContent>
         <pre>
           {`${getHhmmss(matchStartInQueryFloat)} - ${getHhmmss(matchStartInQueryFloat + matchDurationFloat)} ${name}\n`}
