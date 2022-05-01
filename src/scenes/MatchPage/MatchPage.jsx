@@ -28,7 +28,7 @@ export default function AppContent() {
   const [precomputeList, setPrecomputeList] = useState([]);
   const [selectedAnalysis, selectAnalysis] = useState({});
   const [matchData, setMatchData] = useState({ parsedMatchesByDatabase: [] });
-  const { basename: selectedAnalysisName } = selectedAnalysis || {};
+  const { basename: selectedAnalysisName, fullname: selectedAnalysisFullname } = selectedAnalysis || {};
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
@@ -45,6 +45,11 @@ export default function AppContent() {
       window.ipc.removeAllListeners('matchesListed');
     };
   }, []);
+
+  // clear selected analysis when the precompute list is updated
+  useEffect(() => {
+    selectAnalysis({});
+  }, [precomputeList]);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -133,7 +138,7 @@ export default function AppContent() {
         <DrawerHeader />
         {
           selectedAnalysisName
-            ? <ListMatches name={selectedAnalysisName} matchData={matchData} />
+            ? <ListMatches filename={selectedAnalysisFullname} name={selectedAnalysisName} matchData={matchData} />
             : (
               <Box>
                 <Button

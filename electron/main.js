@@ -387,6 +387,36 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
   }
 });
 
+ipcMain.on('exportAnalysis', async (event, { filename }) => {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    defaultPath: basename(filename),
+    title: 'Export analysis',
+  }) || {};
+  if (!canceled) {
+    cp.sync(filename, filePath);
+  }
+  const jsonFilename = filename.replace(/\.afpt$/, '.json');
+  const { filePath: jsonFilePath, canceled: jsonCanceled } = await dialog.showSaveDialog({
+    defaultPath: basename(jsonFilename),
+    title: 'Export analysis metadata',
+  }) || {};
+  if (!jsonCanceled) {
+    cp.sync(jsonFilename, jsonFilePath);
+  }
+  if (!canceled) {
+    const { response } = await dialog.showMessageBox({
+      message: 'Remove the analysis from Fingerprinter after exporting?',
+      buttons: ['Remove', 'Keep'],
+    }) || {};
+    if (response === 0) { // remove
+      await Promise.all([rm(filename), rm(jsonFilename)]);
+      listFiles(getPrecomputePath(), '.afpt').then((files) => {
+        sendToMainWindow('precomputeListed', { files });
+      });
+    }
+  }
+});
+
 ipcMain.on('openAudioFile', () => {
   dialog.showOpenDialog({
     properties: ['openFile'],

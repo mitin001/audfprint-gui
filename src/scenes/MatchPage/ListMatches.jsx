@@ -1,13 +1,25 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import { CgExport } from 'react-icons/cg';
 import MatchCard from './MatchCard';
+import theme from '../../theme';
 
 export default function ListMatches(props) {
-  const { name, matchData } = props || {};
+  const { filename, name, matchData } = props || {};
   const { error, parsedMatchesByDatabase } = matchData || {};
 
   return (
     <Box>
+      <Button
+        sx={{ mb: 2 }}
+        theme={theme}
+        variant="contained"
+        startIcon={<CgExport size={25} />}
+        onKeyPress={() => window.ipc.send('exportAnalysis', { filename })}
+        onClick={() => window.ipc.send('exportAnalysis', { filename })}
+      >
+        Export analysis
+      </Button>
       <pre>{error || ''}</pre>
       {
         Object.keys(parsedMatchesByDatabase).map((database) => (
