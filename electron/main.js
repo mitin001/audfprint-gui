@@ -6,7 +6,7 @@ const {
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
 const {
-  existsSync, createWriteStream, readFile, writeFile, promises: { rm },
+  existsSync, createWriteStream, readFile, writeFile, promises: { rm, rename },
 } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -448,15 +448,17 @@ ipcMain.on('openAudioFile', () => {
     const [filename] = filePaths || [];
     const winFilename = filename.replace(/\//g, '\\');
     const sourceFilename = process.platform === 'win32' ? winFilename : filename;
-    const code = getAudfprintScript(['precompute', '-p', getPrecomputePath(), '-i', 4, sourceFilename]);
+    const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
     const lines = await sendPythonOutput('Analyzing...', code);
 
-    let precomputePath = '';
+    let originalPrecomputePath = '';
     lines.forEach((line) => {
-      if (!precomputePath) {
-        ([, precomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
+      if (!originalPrecomputePath) {
+        ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
       }
     });
+    const precomputePath = join(getPrecomputePath(), basename(originalPrecomputePath));
+    await rename(originalPrecomputePath, precomputePath);
 
     const matchesByDatabase = {};
     const parsedMatchesByDatabase = {};
