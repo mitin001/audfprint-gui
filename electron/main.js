@@ -6,7 +6,7 @@ const {
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
 const {
-  existsSync, createWriteStream, readFile, writeFile, promises: { rm, rename },
+  existsSync, createWriteStream, readFile, writeFile, promises: { rm, rename, mkdir },
 } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -457,7 +457,11 @@ ipcMain.on('openAudioFile', () => {
         ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
       }
     });
-    const precomputePath = join(getPrecomputePath(), basename(originalPrecomputePath));
+    const precomputeDir = getPrecomputePath();
+    const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
+    if (!existsSync(precomputeDir)) {
+      await mkdir(precomputeDir);
+    }
     await rename(originalPrecomputePath, precomputePath);
 
     const matchesByDatabase = {};
