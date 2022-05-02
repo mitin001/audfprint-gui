@@ -79,6 +79,22 @@ const getAudfprintScript = (argv) => {
   `.replace(/\n\s{4}/g, '\n');
 };
 
+const getAudfprintScriptForDir = (dir, argv) => {
+  const path = getAudfprintPath();
+  const quotedDir = JSON.stringify(dir);
+  const quotedDependencyPath = JSON.stringify(path);
+  const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
+  return `
+    import os
+    import sys
+    sys.path.append(${quotedDependencyPath})
+    from audfprint import main
+    os.chdir(${quotedDir})
+    if __name__ == "__main__":
+        main([${quotedArgv.join(',')}])
+  `.replace(/\n\s{4}/g, '\n');
+};
+
 const getPipScript = () => {
   const path = getAudfprintPath();
   const quotedDependencyPath = JSON.stringify(path);
@@ -505,7 +521,7 @@ ipcMain.on('storeDatabase', async (event, options) => {
   const { base: defaultPath } = parse(root) || {};
   const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
   const listPath = join(getDatabasePath(), `${defaultPath}.txt`);
-  const code = getAudfprintScript(['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+  const code = getAudfprintScriptForDir(root, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
   await sendPythonOutput('Fingerprinting...', code);
 
   const listCode = getAudfprintScript(['list', '-d', dbPath]);
