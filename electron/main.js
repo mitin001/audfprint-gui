@@ -521,7 +521,13 @@ ipcMain.on('storeDatabase', async (event, options) => {
   const { base: defaultPath } = parse(root) || {};
   const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
   const listPath = join(getDatabasePath(), `${defaultPath}.txt`);
-  const code = getAudfprintScriptForDir(root, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+
+  let code;
+  if (root) {
+    code = getAudfprintScriptForDir(root, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+  } else {
+    code = getAudfprintScript(['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+  }
   await sendPythonOutput('Fingerprinting...', code);
 
   const listCode = getAudfprintScript(['list', '-d', dbPath]);
