@@ -112,12 +112,12 @@ export default function ReviewAudioFiles() {
           startIcon={<RiSave3Fill size={25} />}
           onKeyPress={() => (
             window.ipc.send('storeDatabase', {
-              root: redaction, filenames: filteredFilenames, cores,
+              root, cwd: redaction, filenames: filteredFilenames, cores,
             })
           )}
           onClick={() => (
             window.ipc.send('storeDatabase', {
-              root: redaction, filenames: filteredFilenames, cores,
+              root, cwd: redaction, filenames: filteredFilenames, cores,
             })
           )}
         >

@@ -517,14 +517,16 @@ ipcMain.on('openAudioFile', () => {
 });
 
 ipcMain.on('storeDatabase', async (event, options) => {
-  const { root, filenames, cores } = options || {};
+  const {
+    root, cwd, filenames, cores,
+  } = options || {};
   const { base: defaultPath } = parse(root) || {};
   const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
   const listPath = join(getDatabasePath(), `${defaultPath}.txt`);
 
   let code;
-  if (root) {
-    code = getAudfprintScriptForDir(root, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
+  if (cwd) {
+    code = getAudfprintScriptForDir(cwd, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
   } else {
     code = getAudfprintScript(['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
   }
