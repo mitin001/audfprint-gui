@@ -547,39 +547,46 @@ ipcMain.on('storeDatabase', async (event, options) => {
 
   const dbName = basename(dbPath, '.pklz');
   const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
-  await Promise.all(precomputeFiles.map(async ({ fullname: precomputePath }) => {
-    const matchCode = getAudfprintScript(['match', '-d', dbPath, precomputePath, '-R']);
-    const matchLines = await sendPythonOutput('Matching...', matchCode);
+  const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
+  const matchCode = getAudfprintScript(['match', '-d', dbPath, ...precomputePaths, '-R']);
+  const matchLines = await sendPythonOutput('Matching...', matchCode);
+
+  matchLines.forEach((line) => {
+    const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
+    if (!precomputePath) {
+      return;
+    }
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
     readFile(jsonPath, 'utf-8', (error, contents) => {
       try {
         const analysis = JSON.parse(contents.toString());
         const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
-        matchesByDatabase[dbName] = matchLines;
-        matchLines.forEach((line) => {
-          const [
-            isMatch,
-            matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
-            commonHashNumerator, commonHashDenominator, rank,
-          ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
-          if (isMatch) {
-            parsedMatchesByDatabase[dbName] = {
-              matchDuration: matchDuration.trim(),
-              matchStartInQuery: matchStartInQuery.trim(),
-              matchStartInFingerprint: matchStartInFingerprint.trim(),
-              matchFilename: matchFilename.trim(),
-              commonHashNumerator: commonHashNumerator.trim(),
-              commonHashDenominator: commonHashDenominator.trim(),
-              rank: rank.trim(),
-            };
-          }
-        });
+        if (!matchesByDatabase[dbName]) {
+          matchesByDatabase[dbName] = [];
+        }
+        matchesByDatabase[dbName].push(line);
+        const [
+          isMatch,
+          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
+          commonHashNumerator, commonHashDenominator, rank,
+        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
+        if (isMatch) {
+          parsedMatchesByDatabase[dbName] = {
+            matchDuration: matchDuration.trim(),
+            matchStartInQuery: matchStartInQuery.trim(),
+            matchStartInFingerprint: matchStartInFingerprint.trim(),
+            matchFilename: matchFilename.trim(),
+            commonHashNumerator: commonHashNumerator.trim(),
+            commonHashDenominator: commonHashDenominator.trim(),
+            rank: rank.trim(),
+          };
+        }
         writeFile(jsonPath, JSON.stringify({ matchesByDatabase, parsedMatchesByDatabase }), () => {});
       } catch (e) {
         // ignore errors
       }
     });
-  }));
+  });
   listFiles(getDatabasePath(), '.pklz').then((files) => {
     sendToMainWindow('databasesListed', { files });
   });
