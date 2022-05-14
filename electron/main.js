@@ -378,26 +378,18 @@ ipcMain.on('exportDatabase', async (event, { filename }) => {
     defaultPath: basename(filename),
     title: 'Export database',
   }) || {};
+  const txtFilename = filename.replace(/\.pklz$/, '.txt');
+  let txtFilePath = `${filePath}.txt`;
+  if (filePath.indexOf('.pklz') !== -1) {
+    txtFilePath = filePath.replace(/\.pklz$/, '.txt');
+  }
   if (!canceled) {
     try {
       cp.sync(filename, filePath);
-    } catch (e) {
-      // ignore copy error
-    }
-  }
-  const txtFilename = filename.replace(/\.pklz$/, '.txt');
-  const { filePath: txtFilePath, canceled: txtCanceled } = await dialog.showSaveDialog({
-    defaultPath: basename(txtFilename),
-    title: 'Export database metadata',
-  }) || {};
-  if (!txtCanceled) {
-    try {
       cp.sync(txtFilename, txtFilePath);
     } catch (e) {
       // ignore copy error
     }
-  }
-  if (!canceled) {
     const { response } = await dialog.showMessageBox({
       message: 'Remove the database from Fingerprinter after exporting?',
       buttons: ['Remove', 'Keep'],
@@ -420,26 +412,18 @@ ipcMain.on('exportAnalysis', async (event, { filename }) => {
     defaultPath: basename(filename),
     title: 'Export analysis',
   }) || {};
+  const jsonFilename = filename.replace(/\.afpt$/, '.json');
+  let jsonFilePath = `${filePath}.json`;
+  if (filePath.indexOf('.afpt') !== -1) {
+    jsonFilePath = filePath.replace(/\.afpt$/, '.json');
+  }
   if (!canceled) {
     try {
       cp.sync(filename, filePath);
-    } catch (e) {
-      // ignore copy error
-    }
-  }
-  const jsonFilename = filename.replace(/\.afpt$/, '.json');
-  const { filePath: jsonFilePath, canceled: jsonCanceled } = await dialog.showSaveDialog({
-    defaultPath: basename(jsonFilename),
-    title: 'Export analysis metadata',
-  }) || {};
-  if (!jsonCanceled) {
-    try {
       cp.sync(jsonFilename, jsonFilePath);
     } catch (e) {
       // ignore copy error
     }
-  }
-  if (!canceled) {
     const { response } = await dialog.showMessageBox({
       message: 'Remove the analysis from Fingerprinter after exporting?',
       buttons: ['Remove', 'Keep'],
