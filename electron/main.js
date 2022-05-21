@@ -454,11 +454,13 @@ ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
     filenames.push(txtFilename);
   });
   if (!canceled) {
-    try {
-      filenames.map((filename) => cp.sync(filename, join(dir, basename(filename))));
-    } catch (e) {
-      // ignore copy error
-    }
+    filenames.forEach((filename) => {
+      try {
+        cp.sync(filename, join(dir, basename(filename)));
+      } catch (e) {
+        // ignore copy error
+      }
+    });
     const { response } = await dialog.showMessageBox({
       message: files.length > 1 ? manifest.pluralRemovalMessage : manifest.singularRemovalMessage,
       buttons: ['Remove', 'Keep'],
