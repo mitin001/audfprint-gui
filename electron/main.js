@@ -373,7 +373,7 @@ ipcMain.on('listMatches', (event, { filename }) => {
   });
 });
 
-ipcMain.on('exportAllDatabases', async () => {
+ipcMain.on('exportDatabases', async (event, { filename: requestedFilename }) => {
   const { filePaths, canceled } = await dialog.showOpenDialog({
     properties: ['openDirectory'],
     title: 'Export all databases',
@@ -382,6 +382,10 @@ ipcMain.on('exportAllDatabases', async () => {
   const dbFiles = await listFiles(getDatabasePath(), '.pklz');
   const filenames = [];
   dbFiles.forEach(({ fullname: filename }) => {
+    if (requestedFilename && filename !== requestedFilename) {
+      // if the user only requested export of a single database, do not stage this database for export
+      return;
+    }
     const txtFilename = filename.replace(/\.pklz$/, '.txt');
     filenames.push(filename);
     filenames.push(txtFilename);
@@ -392,47 +396,14 @@ ipcMain.on('exportAllDatabases', async () => {
     } catch (e) {
       // ignore copy error
     }
+    const s = dbFiles.length ? 's' : '';
     const { response } = await dialog.showMessageBox({
-      message: 'Remove the database from Fingerprinter after exporting?',
+      message: `Remove the exported database${s} from Fingerprinter?`,
       buttons: ['Remove', 'Keep'],
     }) || {};
     if (response === 0) { // remove
       try {
         await Promise.all(filenames.map((filename) => rm(filename)));
-      } catch (e) {
-        // ignore remove error
-      }
-      listFiles(getDatabasePath(), '.pklz').then((files) => {
-        sendToMainWindow('databasesListed', { files });
-      });
-    }
-  }
-});
-
-ipcMain.on('exportDatabase', async (event, { filename }) => {
-  const { filePath, canceled } = await dialog.showSaveDialog({
-    defaultPath: basename(filename),
-    title: 'Export database',
-  }) || {};
-  const txtFilename = filename.replace(/\.pklz$/, '.txt');
-  let txtFilePath = `${filePath}.txt`;
-  if (filePath.indexOf('.pklz') !== -1) {
-    txtFilePath = filePath.replace(/\.pklz$/, '.txt');
-  }
-  if (!canceled) {
-    try {
-      cp.sync(filename, filePath);
-      cp.sync(txtFilename, txtFilePath);
-    } catch (e) {
-      // ignore copy error
-    }
-    const { response } = await dialog.showMessageBox({
-      message: 'Remove the database from Fingerprinter after exporting?',
-      buttons: ['Remove', 'Keep'],
-    }) || {};
-    if (response === 0) { // remove
-      try {
-        await Promise.all([rm(filename), rm(txtFilename)]);
       } catch (e) {
         // ignore remove error
       }

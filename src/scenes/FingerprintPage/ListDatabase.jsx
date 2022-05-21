@@ -33,8 +33,8 @@ export default function ListDatabase(props) {
         theme={theme}
         variant="contained"
         startIcon={<CgExport size={25} />}
-        onKeyPress={() => window.ipc.send('exportDatabase', { filename })}
-        onClick={() => window.ipc.send('exportDatabase', { filename })}
+        onKeyPress={() => window.ipc.send('exportDatabases', { filename })}
+        onClick={() => window.ipc.send('exportDatabases', { filename })}
       >
         Export database
       </Button>
