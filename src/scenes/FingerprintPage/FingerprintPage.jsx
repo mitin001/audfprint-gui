@@ -124,30 +124,34 @@ export default function FingerprintPage() {
             </ListItemIcon>
             <ListItemText primary="New" sx={{ opacity: open ? 1 : 0 }} />
           </ListItemButton>
-          <ListItemButton
-            sx={{
-              minHeight: 48,
-              justifyContent: open ? 'initial' : 'center',
-              px: 2.5,
-            }}
-            onClick={() => window.ipc.send('exportAllDatabases')}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: open ? 3 : 'auto',
-                justifyContent: 'center',
-              }}
-            >
-              <HiOutlineArrowCircleUp
-                data-delay-show="500"
-                data-tip="Export all"
-                size={25}
-              />
-              <ReactTooltip />
-            </ListItemIcon>
-            <ListItemText primary="Export all" sx={{ opacity: open ? 1 : 0 }} />
-          </ListItemButton>
+          {
+            databaseList.length ? (
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={() => window.ipc.send('exportAllDatabases')}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <HiOutlineArrowCircleUp
+                    data-delay-show="500"
+                    data-tip="Export all"
+                    size={25}
+                  />
+                  <ReactTooltip />
+                </ListItemIcon>
+                <ListItemText primary="Export all" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            ) : null
+          }
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
