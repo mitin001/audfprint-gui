@@ -14,6 +14,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Button } from '@mui/material';
 import { IoMdAddCircle } from 'react-icons/io';
+import { HiOutlineArrowCircleUp } from 'react-icons/hi';
 import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from '../FingerprintPage/PythonOutput';
@@ -132,6 +133,34 @@ export default function AppContent() {
             </ListItemIcon>
             <ListItemText primary="New" sx={{ opacity: open ? 1 : 0 }} />
           </ListItemButton>
+          {
+            precomputeList.length ? (
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={() => window.ipc.send('export', { object: 'analyses' })}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <HiOutlineArrowCircleUp
+                    data-delay-show="500"
+                    data-tip="Export all"
+                    size={25}
+                  />
+                  <ReactTooltip />
+                </ListItemIcon>
+                <ListItemText primary="Export all" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            ) : null
+          }
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

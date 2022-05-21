@@ -132,7 +132,7 @@ export default function FingerprintPage() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
-                onClick={() => window.ipc.send('exportDatabases', {})}
+                onClick={() => window.ipc.send('export', { object: 'databases' })}
               >
                 <ListItemIcon
                   sx={{

@@ -15,8 +15,8 @@ export default function ListMatches(props) {
         theme={theme}
         variant="contained"
         startIcon={<CgExport size={25} />}
-        onKeyPress={() => window.ipc.send('exportAnalysis', { filename })}
-        onClick={() => window.ipc.send('exportAnalysis', { filename })}
+        onKeyPress={() => window.ipc.send('export', { object: 'analyses', filename })}
+        onClick={() => window.ipc.send('export', { object: 'analyses', filename })}
       >
         Export analysis
       </Button>

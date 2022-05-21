@@ -373,20 +373,45 @@ ipcMain.on('listMatches', (event, { filename }) => {
   });
 });
 
-ipcMain.on('exportDatabases', async (event, { filename: requestedFilename }) => {
+ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
+  const manifests = {
+    databases: {
+      title: 'Export databases',
+      singularRemovalMessage: 'Remove the exported database from Fingerprinter?',
+      pluralRemovalMessage: 'Remove the exported databases from Fingerprinter?',
+      path: getDatabasePath(),
+      dataExt: '.pklz',
+      metadataExt: '.txt',
+      callback: (files) => {
+        sendToMainWindow('databasesListed', { files });
+      },
+    },
+    analyses: {
+      title: 'Export analyses',
+      singularRemovalMessage: 'Remove the exported analysis from Fingerprinter?',
+      pluralRemovalMessage: 'Remove the exported analyses from Fingerprinter?',
+      path: getPrecomputePath(),
+      dataExt: '.afpt',
+      metadataExt: '.json',
+      callback: (files) => {
+        sendToMainWindow('precomputeListed', { files });
+      },
+    },
+  };
+  const manifest = manifests[object];
   const { filePaths, canceled } = await dialog.showOpenDialog({
     properties: ['openDirectory'],
-    title: 'Export all databases',
+    title: requestedFilename ? `Export ${basename(requestedFilename, manifest.dataExt)}` : manifest.title,
   }) || {};
   const [dir] = filePaths || [];
-  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+  const files = await listFiles(manifest.path, manifest.dataExt);
   const filenames = [];
-  dbFiles.forEach(({ fullname: filename }) => {
+  files.forEach(({ fullname: filename }) => {
     if (requestedFilename && filename !== requestedFilename) {
-      // if the user only requested export of a single database, do not stage this database for export
+      // if the user only requested export of a single object and not this object, do not stage this object for export
       return;
     }
-    const txtFilename = filename.replace(/\.pklz$/, '.txt');
+    const txtFilename = filename.replace(manifest.dataExt, manifest.metadataExt);
     filenames.push(filename);
     filenames.push(txtFilename);
   });
@@ -396,9 +421,8 @@ ipcMain.on('exportDatabases', async (event, { filename: requestedFilename }) => 
     } catch (e) {
       // ignore copy error
     }
-    const s = dbFiles.length ? 's' : '';
     const { response } = await dialog.showMessageBox({
-      message: `Remove the exported database${s} from Fingerprinter?`,
+      message: files.length > 1 ? manifest.pluralRemovalMessage : manifest.singularRemovalMessage,
       buttons: ['Remove', 'Keep'],
     }) || {};
     if (response === 0) { // remove
@@ -407,43 +431,7 @@ ipcMain.on('exportDatabases', async (event, { filename: requestedFilename }) => 
       } catch (e) {
         // ignore remove error
       }
-      listFiles(getDatabasePath(), '.pklz').then((files) => {
-        sendToMainWindow('databasesListed', { files });
-      });
-    }
-  }
-});
-
-ipcMain.on('exportAnalysis', async (event, { filename }) => {
-  const { filePath, canceled } = await dialog.showSaveDialog({
-    defaultPath: basename(filename),
-    title: 'Export analysis',
-  }) || {};
-  const jsonFilename = filename.replace(/\.afpt$/, '.json');
-  let jsonFilePath = `${filePath}.json`;
-  if (filePath.indexOf('.afpt') !== -1) {
-    jsonFilePath = filePath.replace(/\.afpt$/, '.json');
-  }
-  if (!canceled) {
-    try {
-      cp.sync(filename, filePath);
-      cp.sync(jsonFilename, jsonFilePath);
-    } catch (e) {
-      // ignore copy error
-    }
-    const { response } = await dialog.showMessageBox({
-      message: 'Remove the analysis from Fingerprinter after exporting?',
-      buttons: ['Remove', 'Keep'],
-    }) || {};
-    if (response === 0) { // remove
-      try {
-        await Promise.all([rm(filename), rm(jsonFilename)]);
-      } catch (e) {
-        // ignore remove error
-      }
-      listFiles(getPrecomputePath(), '.afpt').then((files) => {
-        sendToMainWindow('precomputeListed', { files });
-      });
+      listFiles(manifest.path, manifest.dataExt).then(manifest.callback);
     }
   }
 });
