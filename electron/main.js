@@ -373,6 +373,42 @@ ipcMain.on('listMatches', (event, { filename }) => {
   });
 });
 
+ipcMain.on('exportAllDatabases', async () => {
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: 'Export all databases',
+  }) || {};
+  const [dir] = filePaths || [];
+  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+  const filenames = [];
+  dbFiles.forEach(({ fullname: filename }) => {
+    const txtFilename = filename.replace(/\.pklz$/, '.txt');
+    filenames.push(filename);
+    filenames.push(txtFilename);
+  });
+  if (!canceled) {
+    try {
+      filenames.map((filename) => cp.sync(filename, join(dir, basename(filename))));
+    } catch (e) {
+      // ignore copy error
+    }
+    const { response } = await dialog.showMessageBox({
+      message: 'Remove the database from Fingerprinter after exporting?',
+      buttons: ['Remove', 'Keep'],
+    }) || {};
+    if (response === 0) { // remove
+      try {
+        await Promise.all(filenames.map((filename) => rm(filename)));
+      } catch (e) {
+        // ignore remove error
+      }
+      listFiles(getDatabasePath(), '.pklz').then((files) => {
+        sendToMainWindow('databasesListed', { files });
+      });
+    }
+  }
+});
+
 ipcMain.on('exportDatabase', async (event, { filename }) => {
   const { filePath, canceled } = await dialog.showSaveDialog({
     defaultPath: basename(filename),
