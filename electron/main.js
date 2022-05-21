@@ -373,6 +373,44 @@ ipcMain.on('listMatches', (event, { filename }) => {
   });
 });
 
+ipcMain.on('import', async (event, { object }) => {
+  const manifests = {
+    databases: {
+      title: 'Select a directory with .pklz files',
+      emptyMessage: 'No .pklz files found in the selected directory',
+      path: getDatabasePath(),
+      dataExt: '.pklz',
+      callback: (files) => {
+        sendToMainWindow('databasesListed', { files });
+      },
+    },
+    analyses: {
+      title: 'Select a directory with .afpt files',
+      emptyMessage: 'No .afpt files found in the selected directory',
+      path: getPrecomputePath(),
+      dataExt: '.afpt',
+      callback: (files) => {
+        sendToMainWindow('precomputeListed', { files });
+      },
+    },
+  };
+  const manifest = manifests[object];
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+    title: manifest.title,
+  }) || {};
+  if (canceled) {
+    return;
+  }
+  const [dir] = filePaths || [];
+  const files = await listFiles(dir, manifest.dataExt);
+  if (!files.length) {
+    await dialog.showMessageBox({ message: manifest.emptyMessage });
+  }
+  files.map(({ fullname: filename }) => cp.sync(filename, join(manifest.path, basename(filename))));
+  listFiles(manifest.path, manifest.dataExt).then(manifest.callback);
+});
+
 ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
   const manifests = {
     databases: {

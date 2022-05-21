@@ -13,7 +13,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { IoMdAddCircle } from 'react-icons/io';
-import { HiOutlineArrowCircleUp } from 'react-icons/hi';
+import { HiOutlineArrowCircleUp, HiOutlineArrowCircleDown } from 'react-icons/hi';
 import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import mainTheme from '../../theme';
@@ -169,6 +169,16 @@ export default function FingerprintPage() {
                   onClick={() => window.ipc.send('openAudioDirectory')}
                 >
                   Select directory with audio files
+                </Button>
+                <Button
+                  theme={theme}
+                  sx={{ ml: 1 }}
+                  variant="contained"
+                  startIcon={<HiOutlineArrowCircleDown size={25} />}
+                  onKeyPress={() => window.ipc.send('import', { object: 'databases' })}
+                  onClick={() => window.ipc.send('import', { object: 'databases' })}
+                >
+                  Import fingerprint databases
                 </Button>
                 <ReviewAudioFiles />
               </Box>

@@ -14,7 +14,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Button } from '@mui/material';
 import { IoMdAddCircle } from 'react-icons/io';
-import { HiOutlineArrowCircleUp } from 'react-icons/hi';
+import { HiOutlineArrowCircleDown, HiOutlineArrowCircleUp } from 'react-icons/hi';
 import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from '../FingerprintPage/PythonOutput';
@@ -178,6 +178,16 @@ export default function AppContent() {
                   onClick={() => window.ipc.send('openAudioFile')}
                 >
                   Select audio file
+                </Button>
+                <Button
+                  theme={theme}
+                  sx={{ ml: 1 }}
+                  variant="contained"
+                  startIcon={<HiOutlineArrowCircleDown size={25} />}
+                  onKeyPress={() => window.ipc.send('import', { object: 'analyses' })}
+                  onClick={() => window.ipc.send('import', { object: 'analyses' })}
+                >
+                  Import analyses
                 </Button>
                 <PythonOutput timestamp={new Date().valueOf()} />
               </Box>
