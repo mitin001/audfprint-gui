@@ -441,7 +441,10 @@ ipcMain.on('import', async (event, { object }) => {
         const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
         const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
         sendToMainWindow('databasesListed', { files });
-        files.map(({ fullname: filename }) => processNewDatabase(filename, precomputePaths));
+        files.reduce(
+          (p, { fullname: filename }) => p.then(() => processNewDatabase(filename, precomputePaths)),
+          Promise.resolve(),
+        );
       },
     },
     analyses: {
