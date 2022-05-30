@@ -6,7 +6,6 @@ import {
   Box, Button, Grid, Slider, TextField, Typography,
 } from '@mui/material';
 import theme from '../../theme';
-import PythonOutput from './PythonOutput';
 
 export default function ReviewAudioFiles() {
   const [systemData, setSystemData] = useState({ root: '', filenames: [], maxCores: 1 });
@@ -124,7 +123,6 @@ export default function ReviewAudioFiles() {
           Save fingerprint database
         </Button>
       </Box>
-      <PythonOutput />
       <ol>
         {
           filteredFilenames.map((filename) => <li key={filename}>{filename}</li>)

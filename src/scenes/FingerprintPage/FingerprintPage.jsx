@@ -21,6 +21,7 @@ import { DrawerHeader, AppBar, Drawer } from '../../drawer';
 import InitialIcon from '../../InitialIcon';
 import ReviewAudioFiles from './ReviewAudioFiles';
 import ListDatabase from './ListDatabase';
+import PythonOutput from './PythonOutput';
 
 export default function FingerprintPage() {
   const theme = mainTheme;
@@ -181,6 +182,7 @@ export default function FingerprintPage() {
                   Import fingerprint databases
                 </Button>
                 <ReviewAudioFiles />
+                <PythonOutput />
               </Box>
             )
         }
