@@ -601,8 +601,8 @@ ipcMain.on('storeDatabase', async (event, options) => {
   } = options || {};
   const { base: defaultPath } = parse(root) || {};
   const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
-  const listPath = join(getDatabasePath(), `${defaultPath}.txt`);
-
+  const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
+  const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
   let code;
   if (cwd) {
     code = getAudfprintScriptForDir(cwd, ['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
@@ -610,62 +610,7 @@ ipcMain.on('storeDatabase', async (event, options) => {
     code = getAudfprintScript(['new', '-C', '-H', cores, '-d', dbPath, ...filenames]);
   }
   await sendPythonOutput('Fingerprinting...', code);
-
-  const listCode = getAudfprintScript(['list', '-d', dbPath]);
-  PythonShell.runString(listCode, { pythonPath }, (error, output) => {
-    const file = createWriteStream(listPath);
-    if (error) {
-      file.write(error.toString());
-    } else {
-      output.forEach((line) => {
-        file.write(`${line}\n`);
-      });
-    }
-    file.end();
-  });
-
-  const dbName = basename(dbPath, '.pklz');
-  const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
-  const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
-  const matchCode = getAudfprintScript(['match', '-d', dbPath, ...precomputePaths, '-R']);
-  const matchLines = await sendPythonOutput('Matching...', matchCode);
-
-  matchLines.forEach((line) => {
-    const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
-    if (!precomputePath) {
-      return;
-    }
-    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    readFile(jsonPath, 'utf-8', async (error, contents) => {
-      try {
-        const analysis = JSON.parse(contents.toString());
-        const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
-        if (!matchesByDatabase[dbName]) {
-          matchesByDatabase[dbName] = [];
-        }
-        matchesByDatabase[dbName].push(line);
-        const [
-          isMatch,
-          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
-          commonHashNumerator, commonHashDenominator, rank,
-        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
-        if (isMatch) {
-          parsedMatchesByDatabase[dbName] = {
-            matchDuration: matchDuration.trim(),
-            matchStartInQuery: matchStartInQuery.trim(),
-            matchStartInFingerprint: matchStartInFingerprint.trim(),
-            matchFilename: matchFilename.trim(),
-            commonHashNumerator: commonHashNumerator.trim(),
-            commonHashDenominator: commonHashDenominator.trim(),
-            rank: rank.trim(),
-          };
-        }
-        await writeFile(jsonPath, JSON.stringify({ matchesByDatabase, parsedMatchesByDatabase }));
-      } catch (e) {
-        // ignore errors
-      }
-    });
-  });
+  await processNewDatabase(dbPath, precomputePaths);
   listFiles(getDatabasePath(), '.pklz').then((files) => {
     sendToMainWindow('databasesListed', { files });
   });
