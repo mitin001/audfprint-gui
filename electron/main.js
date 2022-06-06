@@ -6,7 +6,10 @@ const {
 const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
 const {
-  existsSync, createWriteStream, readFile, writeFile, promises: { rm, rename, mkdir },
+  promises: {
+    writeFile, rm, rename, mkdir,
+  },
+  existsSync, createWriteStream, readFile,
 } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -382,7 +385,7 @@ const match = async (dbName, dbFilename, precomputePaths) => {
       return;
     }
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    readFile(jsonPath, 'utf-8', (error, contents) => {
+    readFile(jsonPath, 'utf-8', async (error, contents) => {
       try {
         const analysis = JSON.parse(contents.toString());
         const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
@@ -406,7 +409,7 @@ const match = async (dbName, dbFilename, precomputePaths) => {
             rank: rank.trim(),
           };
         }
-        writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }), () => {});
+        await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
       } catch (e) {
         // ignore errors
       }
@@ -569,7 +572,7 @@ ipcMain.on('openAudioFile', () => {
     const dbFiles = await listFiles(getDatabasePath(), '.pklz');
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
 
-    writeFile(jsonPath, JSON.stringify({ precompute: lines }), () => {});
+    await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
     dbFiles.reduce(
       (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
       Promise.resolve(),
@@ -621,7 +624,7 @@ ipcMain.on('storeDatabase', async (event, options) => {
       return;
     }
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    readFile(jsonPath, 'utf-8', (error, contents) => {
+    readFile(jsonPath, 'utf-8', async (error, contents) => {
       try {
         const analysis = JSON.parse(contents.toString());
         const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
@@ -645,7 +648,7 @@ ipcMain.on('storeDatabase', async (event, options) => {
             rank: rank.trim(),
           };
         }
-        writeFile(jsonPath, JSON.stringify({ matchesByDatabase, parsedMatchesByDatabase }), () => {});
+        await writeFile(jsonPath, JSON.stringify({ matchesByDatabase, parsedMatchesByDatabase }));
       } catch (e) {
         // ignore errors
       }
