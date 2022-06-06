@@ -235,44 +235,49 @@ const sendPythonOutput = (header, code) => new Promise((resolve) => {
   });
 });
 
+const processMatchLine = async (line, dbName, precomputePaths) => {
+  const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
+  if (!precomputePath) {
+    return;
+  }
+  const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
+  try {
+    const contents = await readFile(jsonPath, 'utf-8');
+    const analysis = JSON.parse(contents.toString());
+    const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
+    if (!matchesByDatabase[dbName]) {
+      matchesByDatabase[dbName] = [];
+    }
+    matchesByDatabase[dbName].push(line);
+    const [
+      isMatch,
+      matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
+      commonHashNumerator, commonHashDenominator, rank,
+    ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
+    if (isMatch) {
+      parsedMatchesByDatabase[dbName] = {
+        matchDuration: matchDuration.trim(),
+        matchStartInQuery: matchStartInQuery.trim(),
+        matchStartInFingerprint: matchStartInFingerprint.trim(),
+        matchFilename: matchFilename.trim(),
+        commonHashNumerator: commonHashNumerator.trim(),
+        commonHashDenominator: commonHashDenominator.trim(),
+        rank: rank.trim(),
+      };
+    }
+    await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
+  } catch (e) {
+    // ignore errors
+  }
+};
+
 const match = async (dbName, dbFilename, precomputePaths) => {
   const matchCode = getAudfprintScript(['match', '-d', dbFilename, ...precomputePaths, '-R']);
   const matchLines = await sendPythonOutput('Matching...', matchCode);
-  matchLines.map(async (line) => {
-    const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
-    if (!precomputePath) {
-      return;
-    }
-    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    try {
-      const contents = await readFile(jsonPath, 'utf-8');
-      const analysis = JSON.parse(contents.toString());
-      const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
-      if (!matchesByDatabase[dbName]) {
-        matchesByDatabase[dbName] = [];
-      }
-      matchesByDatabase[dbName].push(line);
-      const [
-        isMatch,
-        matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
-        commonHashNumerator, commonHashDenominator, rank,
-      ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
-      if (isMatch) {
-        parsedMatchesByDatabase[dbName] = {
-          matchDuration: matchDuration.trim(),
-          matchStartInQuery: matchStartInQuery.trim(),
-          matchStartInFingerprint: matchStartInFingerprint.trim(),
-          matchFilename: matchFilename.trim(),
-          commonHashNumerator: commonHashNumerator.trim(),
-          commonHashDenominator: commonHashDenominator.trim(),
-          rank: rank.trim(),
-        };
-      }
-      await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
-    } catch (e) {
-      // ignore errors
-    }
-  });
+  matchLines.reduce(
+    (p, line) => p.then(() => processMatchLine(line, dbName, precomputePaths)),
+    Promise.resolve(),
+  );
 };
 
 const processNewDatabase = async (filename, precomputePaths) => {
