@@ -235,6 +235,96 @@ const sendPythonOutput = (header, code) => new Promise((resolve) => {
   });
 });
 
+const match = async (dbName, dbFilename, precomputePaths) => {
+  const matchCode = getAudfprintScript(['match', '-d', dbFilename, ...precomputePaths, '-R']);
+  const matchLines = await sendPythonOutput('Matching...', matchCode);
+  matchLines.forEach((line) => {
+    const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
+    if (!precomputePath) {
+      return;
+    }
+    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
+    readFile(jsonPath, 'utf-8', async (error, contents) => {
+      try {
+        const analysis = JSON.parse(contents.toString());
+        const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
+        if (!matchesByDatabase[dbName]) {
+          matchesByDatabase[dbName] = [];
+        }
+        matchesByDatabase[dbName].push(line);
+        const [
+          isMatch,
+          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
+          commonHashNumerator, commonHashDenominator, rank,
+        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
+        if (isMatch) {
+          parsedMatchesByDatabase[dbName] = {
+            matchDuration: matchDuration.trim(),
+            matchStartInQuery: matchStartInQuery.trim(),
+            matchStartInFingerprint: matchStartInFingerprint.trim(),
+            matchFilename: matchFilename.trim(),
+            commonHashNumerator: commonHashNumerator.trim(),
+            commonHashDenominator: commonHashDenominator.trim(),
+            rank: rank.trim(),
+          };
+        }
+        await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
+      } catch (e) {
+        // ignore errors
+      }
+    });
+  });
+};
+
+const processNewDatabase = async (filename, precomputePaths) => {
+  const listCode = getAudfprintScript(['list', '-d', filename]);
+  const metadataFilename = filename.replace('.pklz', '.txt');
+
+  PythonShell.runString(listCode, { pythonPath }, (error, output) => {
+    const file = createWriteStream(metadataFilename);
+    if (error) {
+      file.write(error.toString());
+    } else {
+      output.forEach((line) => {
+        file.write(`${line}\n`);
+      });
+    }
+    file.end();
+  });
+
+  const dbName = basename(filename, '.pklz');
+  await match(dbName, filename, precomputePaths);
+};
+
+const processNewAnalysis = async (filename) => {
+  const winFilename = filename.replace(/\//g, '\\');
+  const sourceFilename = process.platform === 'win32' ? winFilename : filename;
+  const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
+  const lines = await sendPythonOutput('Analyzing...', code);
+
+  let originalPrecomputePath = '';
+  lines.forEach((line) => {
+    if (!originalPrecomputePath) {
+      ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
+    }
+  });
+  const precomputeDir = getPrecomputePath();
+  const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
+  if (!existsSync(precomputeDir)) {
+    await mkdir(precomputeDir);
+  }
+  await rename(originalPrecomputePath, precomputePath);
+
+  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+  const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
+
+  await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
+  dbFiles.reduce(
+    (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
+    Promise.resolve(),
+  );
+};
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -375,96 +465,6 @@ ipcMain.on('listMatches', (event, { filename }) => {
     }
   });
 });
-
-const match = async (dbName, dbFilename, precomputePaths) => {
-  const matchCode = getAudfprintScript(['match', '-d', dbFilename, ...precomputePaths, '-R']);
-  const matchLines = await sendPythonOutput('Matching...', matchCode);
-  matchLines.forEach((line) => {
-    const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
-    if (!precomputePath) {
-      return;
-    }
-    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    readFile(jsonPath, 'utf-8', async (error, contents) => {
-      try {
-        const analysis = JSON.parse(contents.toString());
-        const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
-        if (!matchesByDatabase[dbName]) {
-          matchesByDatabase[dbName] = [];
-        }
-        matchesByDatabase[dbName].push(line);
-        const [
-          isMatch,
-          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
-          commonHashNumerator, commonHashDenominator, rank,
-        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
-        if (isMatch) {
-          parsedMatchesByDatabase[dbName] = {
-            matchDuration: matchDuration.trim(),
-            matchStartInQuery: matchStartInQuery.trim(),
-            matchStartInFingerprint: matchStartInFingerprint.trim(),
-            matchFilename: matchFilename.trim(),
-            commonHashNumerator: commonHashNumerator.trim(),
-            commonHashDenominator: commonHashDenominator.trim(),
-            rank: rank.trim(),
-          };
-        }
-        await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
-      } catch (e) {
-        // ignore errors
-      }
-    });
-  });
-};
-
-const processNewDatabase = async (filename, precomputePaths) => {
-  const listCode = getAudfprintScript(['list', '-d', filename]);
-  const metadataFilename = filename.replace('.pklz', '.txt');
-
-  PythonShell.runString(listCode, { pythonPath }, (error, output) => {
-    const file = createWriteStream(metadataFilename);
-    if (error) {
-      file.write(error.toString());
-    } else {
-      output.forEach((line) => {
-        file.write(`${line}\n`);
-      });
-    }
-    file.end();
-  });
-
-  const dbName = basename(filename, '.pklz');
-  await match(dbName, filename, precomputePaths);
-};
-
-const processNewAnalysis = async (filename) => {
-  const winFilename = filename.replace(/\//g, '\\');
-  const sourceFilename = process.platform === 'win32' ? winFilename : filename;
-  const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
-  const lines = await sendPythonOutput('Analyzing...', code);
-
-  let originalPrecomputePath = '';
-  lines.forEach((line) => {
-    if (!originalPrecomputePath) {
-      ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
-    }
-  });
-  const precomputeDir = getPrecomputePath();
-  const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
-  if (!existsSync(precomputeDir)) {
-    await mkdir(precomputeDir);
-  }
-  await rename(originalPrecomputePath, precomputePath);
-
-  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
-  const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-
-  await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
-  dbFiles.reduce(
-    (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
-    Promise.resolve(),
-  );
-};
 
 ipcMain.on('import', async (event, { object }) => {
   const manifests = {
