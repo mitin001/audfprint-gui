@@ -406,7 +406,6 @@ const match = async (dbName, dbFilename, precomputePaths) => {
             rank: rank.trim(),
           };
         }
-        writeFile(jsonPath, JSON.stringify({ matchesByDatabase, parsedMatchesByDatabase }), () => {});
         writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }), () => {});
       } catch (e) {
         // ignore errors
