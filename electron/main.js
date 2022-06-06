@@ -7,9 +7,9 @@ const { autoUpdater } = require('electron-updater');
 const { join, parse, basename } = require('path');
 const {
   promises: {
-    writeFile, rm, rename, mkdir,
+    readFile, writeFile, rm, rename, mkdir,
   },
-  existsSync, createWriteStream, readFile,
+  existsSync, createWriteStream,
 } = require('fs');
 const log = require('electron-log');
 const os = require('os');
@@ -238,41 +238,40 @@ const sendPythonOutput = (header, code) => new Promise((resolve) => {
 const match = async (dbName, dbFilename, precomputePaths) => {
   const matchCode = getAudfprintScript(['match', '-d', dbFilename, ...precomputePaths, '-R']);
   const matchLines = await sendPythonOutput('Matching...', matchCode);
-  matchLines.forEach((line) => {
+  matchLines.map(async (line) => {
     const precomputePath = precomputePaths.find((path) => line.indexOf(path) !== -1);
     if (!precomputePath) {
       return;
     }
     const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-    readFile(jsonPath, 'utf-8', async (error, contents) => {
-      try {
-        const analysis = JSON.parse(contents.toString());
-        const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
-        if (!matchesByDatabase[dbName]) {
-          matchesByDatabase[dbName] = [];
-        }
-        matchesByDatabase[dbName].push(line);
-        const [
-          isMatch,
-          matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
-          commonHashNumerator, commonHashDenominator, rank,
-        ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
-        if (isMatch) {
-          parsedMatchesByDatabase[dbName] = {
-            matchDuration: matchDuration.trim(),
-            matchStartInQuery: matchStartInQuery.trim(),
-            matchStartInFingerprint: matchStartInFingerprint.trim(),
-            matchFilename: matchFilename.trim(),
-            commonHashNumerator: commonHashNumerator.trim(),
-            commonHashDenominator: commonHashDenominator.trim(),
-            rank: rank.trim(),
-          };
-        }
-        await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
-      } catch (e) {
-        // ignore errors
+    try {
+      const contents = await readFile(jsonPath, 'utf-8');
+      const analysis = JSON.parse(contents.toString());
+      const { parsedMatchesByDatabase = {}, matchesByDatabase = {} } = analysis || {};
+      if (!matchesByDatabase[dbName]) {
+        matchesByDatabase[dbName] = [];
       }
-    });
+      matchesByDatabase[dbName].push(line);
+      const [
+        isMatch,
+        matchDuration, matchStartInQuery, matchStartInFingerprint, matchFilename,
+        commonHashNumerator, commonHashDenominator, rank,
+      ] = line.match(/^Matched (.+) s starting at (.+) s in .+ to time (.+) s in (.+) with (.+) of (.+) common hashes at rank (.+)$/) || [];
+      if (isMatch) {
+        parsedMatchesByDatabase[dbName] = {
+          matchDuration: matchDuration.trim(),
+          matchStartInQuery: matchStartInQuery.trim(),
+          matchStartInFingerprint: matchStartInFingerprint.trim(),
+          matchFilename: matchFilename.trim(),
+          commonHashNumerator: commonHashNumerator.trim(),
+          commonHashDenominator: commonHashDenominator.trim(),
+          rank: rank.trim(),
+        };
+      }
+      await writeFile(jsonPath, JSON.stringify({ ...analysis, matchesByDatabase, parsedMatchesByDatabase }));
+    } catch (e) {
+      // ignore errors
+    }
   });
 };
 
@@ -442,28 +441,29 @@ ipcMain.on('listDatabases', () => {
   });
 });
 
-ipcMain.on('listDatabase', (event, { filename }) => {
-  readFile(filename.replace(/\.pklz$/, '.txt'), 'utf-8', (error, contents) => {
-    if (error) {
-      sendToMainWindow('pythonOutput', { line: error.toString() });
-    }
+ipcMain.on('listDatabase', async (event, { filename }) => {
+  try {
+    const contents = await readFile(filename.replace(/\.pklz$/, '.txt'), 'utf-8');
     sendToMainWindow('pythonOutput', { line: contents });
-  });
+  } catch (listError) {
+    sendToMainWindow('pythonOutput', { error: listError.toString() });
+  }
 });
 
-ipcMain.on('listMatches', (event, { filename }) => {
-  readFile(filename.replace(/\.afpt$/, '.json'), 'utf-8', (error, contents) => {
-    if (error) {
-      sendToMainWindow('matchesListed', { error: error.toString() });
-    }
-    try {
-      const analysis = JSON.parse(contents.toString());
-      const { parsedMatchesByDatabase } = analysis || {};
-      sendToMainWindow('matchesListed', { parsedMatchesByDatabase });
-    } catch (e) {
-      sendToMainWindow('matchesListed', { error: e.toString() });
-    }
-  });
+ipcMain.on('listMatches', async (event, { filename }) => {
+  let contents;
+  try {
+    contents = await readFile(filename.replace(/\.afpt$/, '.json'), 'utf-8');
+  } catch (listError) {
+    sendToMainWindow('matchesListed', { error: listError.toString() });
+  }
+  try {
+    const analysis = JSON.parse(contents.toString());
+    const { parsedMatchesByDatabase } = analysis || {};
+    sendToMainWindow('matchesListed', { parsedMatchesByDatabase });
+  } catch (parseError) {
+    sendToMainWindow('matchesListed', { error: parseError.toString() });
+  }
 });
 
 ipcMain.on('import', async (event, { object }) => {
