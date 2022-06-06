@@ -437,6 +437,35 @@ const processNewDatabase = async (filename, precomputePaths) => {
   await match(dbName, filename, precomputePaths);
 };
 
+const processNewAnalysis = async (filename) => {
+  const winFilename = filename.replace(/\//g, '\\');
+  const sourceFilename = process.platform === 'win32' ? winFilename : filename;
+  const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
+  const lines = await sendPythonOutput('Analyzing...', code);
+
+  let originalPrecomputePath = '';
+  lines.forEach((line) => {
+    if (!originalPrecomputePath) {
+      ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
+    }
+  });
+  const precomputeDir = getPrecomputePath();
+  const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
+  if (!existsSync(precomputeDir)) {
+    await mkdir(precomputeDir);
+  }
+  await rename(originalPrecomputePath, precomputePath);
+
+  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+  const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
+
+  await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
+  dbFiles.reduce(
+    (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
+    Promise.resolve(),
+  );
+};
+
 ipcMain.on('import', async (event, { object }) => {
   const manifests = {
     databases: {
@@ -447,11 +476,13 @@ ipcMain.on('import', async (event, { object }) => {
       callback: async (files) => {
         const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
         const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
-        sendToMainWindow('databasesListed', { files });
         files.reduce(
           (p, { fullname: filename }) => p.then(() => processNewDatabase(filename, precomputePaths)),
           Promise.resolve(),
         );
+        listFiles(getDatabasePath(), '.pklz').then((mergedFiles) => {
+          sendToMainWindow('databasesListed', { files: mergedFiles });
+        });
       },
     },
     analyses: {
@@ -459,8 +490,14 @@ ipcMain.on('import', async (event, { object }) => {
       emptyMessage: 'No .afpt files found in the selected directory',
       path: getPrecomputePath(),
       dataExt: '.afpt',
-      callback: (files) => {
-        sendToMainWindow('precomputeListed', { files });
+      callback: async (files) => {
+        files.reduce(
+          (p, { fullname: filename }) => p.then(() => processNewAnalysis(filename)),
+          Promise.resolve(),
+        );
+        listFiles(getPrecomputePath(), '.afpt').then((mergedFiles) => {
+          sendToMainWindow('precomputeListed', { files: mergedFiles });
+        });
       },
     },
   };
@@ -551,32 +588,7 @@ ipcMain.on('openAudioFile', () => {
     properties: ['openFile'],
   }).then(async ({ filePaths }) => {
     const [filename] = filePaths || [];
-    const winFilename = filename.replace(/\//g, '\\');
-    const sourceFilename = process.platform === 'win32' ? winFilename : filename;
-    const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
-    const lines = await sendPythonOutput('Analyzing...', code);
-
-    let originalPrecomputePath = '';
-    lines.forEach((line) => {
-      if (!originalPrecomputePath) {
-        ([, originalPrecomputePath] = line.match(/^wrote (.+\.afpt)/) || []);
-      }
-    });
-    const precomputeDir = getPrecomputePath();
-    const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
-    if (!existsSync(precomputeDir)) {
-      await mkdir(precomputeDir);
-    }
-    await rename(originalPrecomputePath, precomputePath);
-
-    const dbFiles = await listFiles(getDatabasePath(), '.pklz');
-    const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-
-    await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
-    dbFiles.reduce(
-      (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
-      Promise.resolve(),
-    );
+    await processNewAnalysis(filename);
     listFiles(getPrecomputePath(), '.afpt').then((files) => {
       sendToMainWindow('precomputeListed', { files });
     });
