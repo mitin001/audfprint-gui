@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
 
 export default function PythonOutput(props) {
   const { timestamp } = props || {};
   const [newLine, setNewLine] = useState({});
   const [lines, setLines] = useState([]);
+  const bottomRef = useRef(null);
 
   useEffect(() => {
     window.ipc.on('pythonOutput', (event, line) => {
@@ -16,6 +17,7 @@ export default function PythonOutput(props) {
   useEffect(() => {
     if (newLine) {
       setLines([...lines, newLine]);
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [newLine]);
 
@@ -31,6 +33,7 @@ export default function PythonOutput(props) {
           </pre>
         ))
       }
+      <div ref={bottomRef} style={{ width: 0 }} />
     </Box>
   );
 }
