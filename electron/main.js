@@ -329,6 +329,11 @@ const processNewAnalysis = async (filename) => {
   );
 };
 
+const copySync = (src, dest) => {
+  sendToMainWindow('pythonOutput', { line: `Copying ${src}...` });
+  cp.sync(src, dest);
+};
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -519,7 +524,10 @@ ipcMain.on('import', async (event, { object }) => {
   if (!files.length) {
     await dialog.showMessageBox({ message: manifest.emptyMessage });
   }
-  files.map(({ fullname: filename }) => cp.sync(filename, join(manifest.path, basename(filename))));
+  files.reduce(
+    (p, { fullname: filename }) => p.then(() => copySync(filename, join(manifest.path, basename(filename)))),
+    Promise.resolve(),
+  );
   listFiles(manifest.path, manifest.dataExt).then(manifest.callback);
 });
 
@@ -568,7 +576,7 @@ ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
   if (!canceled) {
     filenames.forEach((filename) => {
       try {
-        cp.sync(filename, join(dir, basename(filename)));
+        copySync(filename, join(dir, basename(filename)));
       } catch (e) {
         // ignore copy error
       }
