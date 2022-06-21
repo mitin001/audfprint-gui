@@ -262,7 +262,6 @@ const processMatchLine = async (line, dbName, precomputePaths) => {
         matchFilename: matchFilename.trim(),
         commonHashNumerator: commonHashNumerator.trim(),
         commonHashDenominator: commonHashDenominator.trim(),
-        commonHashRatio: parseFloat(commonHashNumerator.trim()) / parseFloat(commonHashDenominator.trim()),
         rank: rank.trim(),
       };
     }

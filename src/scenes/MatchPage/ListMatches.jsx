@@ -44,7 +44,6 @@ export default function ListMatches(props) {
           <MenuItem value="matchStartInFingerprint">Match start in fingerprint</MenuItem>
           <MenuItem value="rank">Rank</MenuItem>
           <MenuItem value="commonHashNumerator">Common hashes</MenuItem>
-          <MenuItem value="commonHashRatio">Common hash %</MenuItem>
         </Select>
       </FormControl>
       <IconButton
