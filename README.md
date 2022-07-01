@@ -1,5 +1,7 @@
 # Audio Fingerprinter
 
+A few sample databases to import can be downloaded here: https://s3.amazonaws.com/writecomments.com/librarymusicthemes/index.html.
+
 ## How to use
 
 <img src="https://user-images.githubusercontent.com/6477175/158115413-28a9a935-cbe2-4f39-b680-c46b9b080401.png" width="800" />
