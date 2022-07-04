@@ -319,14 +319,10 @@ const processNewAnalysis = async (filename) => {
   }
   await rename(originalPrecomputePath, precomputePath);
 
-  const dbFiles = await listFiles(getDatabasePath(), '.pklz');
   const jsonPath = precomputePath.replace(/\.afpt$/, '.json');
-
   await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
-  dbFiles.reduce(
-    (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
-    Promise.resolve(),
-  );
+
+  return precomputePath;
 };
 
 const copySync = (src, dest) => {
@@ -501,8 +497,14 @@ ipcMain.on('import', async (event, { object }) => {
       path: getPrecomputePath(),
       dataExt: '.afpt',
       callback: async (files) => {
+        const precomputePaths = [];
+        const dbFiles = await listFiles(getDatabasePath(), '.pklz');
         files.reduce(
-          (p, { fullname: filename }) => p.then(() => processNewAnalysis(filename)),
+          (p, { fullname: filename }) => p.then(async () => precomputePaths.push(await processNewAnalysis(filename))),
+          Promise.resolve(),
+        );
+        dbFiles.reduce(
+          (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, precomputePaths)),
           Promise.resolve(),
         );
         listFiles(getPrecomputePath(), '.afpt').then((mergedFiles) => {
@@ -606,7 +608,12 @@ ipcMain.on('openAudioFile', () => {
     properties: ['openFile'],
   }).then(async ({ filePaths }) => {
     const [filename] = filePaths || [];
-    await processNewAnalysis(filename);
+    const precomputePath = await processNewAnalysis(filename);
+    const dbFiles = await listFiles(getDatabasePath(), '.pklz');
+    dbFiles.reduce(
+      (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
+      Promise.resolve(),
+    );
     listFiles(getPrecomputePath(), '.afpt').then((files) => {
       sendToMainWindow('precomputeListed', { files });
     });
