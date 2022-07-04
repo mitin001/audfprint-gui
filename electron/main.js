@@ -519,16 +519,21 @@ ipcMain.on('import', async (event, { object }) => {
   if (canceled) {
     return;
   }
+  const newFiles = [];
   const [dir] = filePaths || [];
   const files = await listFiles(dir, manifest.dataExt);
   if (!files.length) {
     await dialog.showMessageBox({ message: manifest.emptyMessage });
   }
-  files.reduce(
-    (p, { fullname: filename }) => p.then(() => copySync(filename, join(manifest.path, basename(filename)))),
+  await files.reduce(
+    (p, { fullname: filename }) => p.then(() => {
+      const dest = join(manifest.path, basename(filename));
+      newFiles.push({ fullname: dest });
+      copySync(filename, dest);
+    }),
     Promise.resolve(),
   );
-  listFiles(manifest.path, manifest.dataExt).then(manifest.callback);
+  await manifest.callback(newFiles);
 });
 
 ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
