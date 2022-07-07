@@ -8,13 +8,18 @@ import {
 import theme from '../../theme';
 
 export default function ReviewAudioFiles() {
-  const [systemData, setSystemData] = useState({ root: '', filenames: [], maxCores: 1 });
+  const [systemData, setSystemData] = useState({
+    root: '', filenames: [], maxCores: 1, platform: '',
+  });
   const [fileTypes, setFileTypes] = useState(localStorage.getItem('fileTypes') || '.mp3,.wav,.flac');
   const [cores, setCores] = useState(1);
   const [redaction, setRedaction] = useState('');
 
-  const { root = '', filenames = [], maxCores = 1 } = systemData || {};
-  const maxPathDepth = (root.match(/\//g) || []).length + 1;
+  const {
+    root = '', filenames = [], maxCores = 1, platform = '',
+  } = systemData || {};
+  const matcher = platform === 'win32' ? /\\/g : /\//g;
+  const maxPathDepth = (root.match(matcher) || []).length + 1;
   const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
   const filteredFilenames = filenames.map((filename) => (
     filename.replace(redaction, '')
@@ -28,9 +33,11 @@ export default function ReviewAudioFiles() {
 
   function pathLabelFormat(selectedPathDepth) {
     if (selectedPathDepth === maxPathDepth) {
-      return `${root}/`;
+      const slash = platform === 'win32' ? '\\' : '/';
+      return `${root}${slash}`;
     }
-    const [match] = root.match(new RegExp(`^([^/]*/){${selectedPathDepth}}`)) || [];
+    const pattern = platform === 'win32' ? `^([^\\]*\\){${selectedPathDepth}}` : `^([^/]*/){${selectedPathDepth}}`;
+    const [match] = root.match(new RegExp(pattern)) || [];
     return match;
   }
 
