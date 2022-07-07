@@ -18,6 +18,7 @@ const find = require('findit');
 const cp = require('cp');
 const { PythonShell } = require('python-shell');
 const openAboutWindow = require('about-window').default;
+const anyAscii = require('any-ascii');
 const { createAppWindow, isMainWindowDefined, sendToMainWindow } = require('./main/app-process');
 
 let audfprintVersion = null;
@@ -67,6 +68,15 @@ const getDatabasePath = () => {
     return join(pathUnpacked, 'databases');
   }
   return join(path, 'databases');
+};
+
+const getAsciiPath = () => {
+  const path = app.getPath('userData');
+  const pathUnpacked = `${path}.unpacked`;
+  if (existsSync(pathUnpacked)) {
+    return join(pathUnpacked, 'ascii');
+  }
+  return join(path, 'ascii');
 };
 
 const getAudfprintScript = (argv) => {
@@ -280,6 +290,11 @@ const match = async (dbName, dbFilename, precomputePaths) => {
   );
 };
 
+const copySync = (src, dest) => {
+  sendToMainWindow('pythonOutput', { line: `Copying ${src}...` });
+  cp.sync(src, dest);
+};
+
 const processNewDatabase = async (filename, precomputePaths) => {
   const listCode = getAudfprintScript(['list', '-d', filename]);
   const metadataFilename = filename.replace('.pklz', '.txt');
@@ -300,12 +315,37 @@ const processNewDatabase = async (filename, precomputePaths) => {
   await match(dbName, filename, precomputePaths);
 };
 
-const processNewAnalysis = async (filename) => {
-  const winFilename = filename.replace(/\//g, '\\');
-  const sourceFilename = process.platform === 'win32' ? winFilename : filename;
-  const code = getAudfprintScript(['precompute', '-i', 4, sourceFilename]);
-  const lines = await sendPythonOutput('Analyzing...', code);
+const analyzeWinAscii = async (filename, baseFilenameAscii) => {
+  const asciiDir = getAsciiPath();
+  const asciiFilename = join(asciiDir, baseFilenameAscii);
+  if (!existsSync(asciiDir)) {
+    await mkdir(asciiDir);
+  }
+  copySync(filename, asciiFilename);
+  const code = getAudfprintScript(['precompute', '-i', 4, asciiFilename]);
+  return sendPythonOutput('Analyzing...', code);
+};
 
+const analyzeWin = async (filename) => {
+  const baseFilename = basename(filename);
+  const baseFilenameAscii = anyAscii(baseFilename).replace(/[<>:"|?*/\\]/g, '');
+  if (baseFilename !== baseFilenameAscii) {
+    return analyzeWinAscii(filename, baseFilenameAscii);
+  }
+  const code = getAudfprintScript(['precompute', '-i', 4, filename.replace(/\//g, '\\')]);
+  return sendPythonOutput('Analyzing...', code);
+};
+
+const analyze = async (filename) => {
+  if (process.platform === 'win32') {
+    return analyzeWin(filename);
+  }
+  const code = getAudfprintScript(['precompute', '-i', 4, filename]);
+  return sendPythonOutput('Analyzing...', code);
+};
+
+const processNewAnalysis = async (filename) => {
+  const lines = await analyze(filename);
   let originalPrecomputePath = '';
   lines.forEach((line) => {
     if (!originalPrecomputePath) {
@@ -323,11 +363,6 @@ const processNewAnalysis = async (filename) => {
   await writeFile(jsonPath, JSON.stringify({ precompute: lines }));
 
   return precomputePath;
-};
-
-const copySync = (src, dest) => {
-  sendToMainWindow('pythonOutput', { line: `Copying ${src}...` });
-  cp.sync(src, dest);
 };
 
 // This method will be called when Electron has finished
