@@ -2,7 +2,7 @@
   "name": "audfprint-gui",
   "author": "mitin001",
   "description": "GUI for audfprint",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "dependencies": {
     "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.8.1",
