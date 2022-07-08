@@ -36,7 +36,7 @@ export default function ReviewAudioFiles() {
       const slash = platform === 'win32' ? '\\' : '/';
       return `${root}${slash}`;
     }
-    const pattern = platform === 'win32' ? `^([^\\]*\\){${selectedPathDepth}}` : `^([^/]*/){${selectedPathDepth}}`;
+    const pattern = platform === 'win32' ? `^([^\\\\]*\\\\){${selectedPathDepth}}` : `^([^/]*/){${selectedPathDepth}}`;
     const [match] = root.match(new RegExp(pattern)) || [];
     return match;
   }
