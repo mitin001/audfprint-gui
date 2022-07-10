@@ -84,6 +84,7 @@ const getAudfprintScript = (argv) => {
   const quotedDependencyPath = JSON.stringify(path);
   const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
   return `
+    # -*- coding: utf-8 -*-
     import sys
     sys.path.append(${quotedDependencyPath})
     from audfprint import main
@@ -98,6 +99,7 @@ const getAudfprintScriptForDir = (dir, argv) => {
   const quotedDependencyPath = JSON.stringify(path);
   const quotedArgv = ['audfprint', ...argv].map((arg) => JSON.stringify(arg));
   return `
+    # -*- coding: utf-8 -*-
     import os
     import sys
     sys.path.append(${quotedDependencyPath})
