@@ -116,3 +116,4 @@ public/audfprint/*
 !public/audfprint/audio_read.py
 precompute
 databases
+ffmpeg
