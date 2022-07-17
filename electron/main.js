@@ -11,6 +11,8 @@ const {
   },
   existsSync, createWriteStream,
 } = require('fs');
+const { https: { get } } = require('follow-redirects');
+const extract = require('extract-zip');
 const log = require('electron-log');
 const os = require('os');
 const glob = require('glob');
@@ -167,7 +169,55 @@ const listFiles = (root, ext) => new Promise((resolve) => {
   });
 });
 
-const checkDependencies = (counter) => {
+const copySync = (src, dest) => {
+  sendToMainWindow('pythonOutput', { line: `Copying ${src}...` });
+  cp.sync(src, dest);
+};
+
+const getFFmpeg = async () => {
+  let platform;
+  if (process.platform === 'darwin') {
+    platform = 'mac';
+  } else if (process.arch === 'x64') {
+    platform = 'win64';
+  } else if (process.arch === 'ia32') {
+    platform = 'win32';
+  } else {
+    return;
+  }
+  const path = getAudfprintPath();
+  const manifest = {
+    win64: {
+      url: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
+      ffmpeg: 'ffmpeg.exe',
+      copy: () => copySync(join(path, 'ffmpeg-master-latest-win64-gpl', 'bin', 'ffmpeg.exe'), join(path, 'ffmpeg.exe')),
+    },
+    win32: {
+      url: 'https://github.com/sudo-nautilus/FFmpeg-Builds-Win32/releases/download/latest/ffmpeg-master-latest-win32-gpl.zip',
+      ffmpeg: 'ffmpeg.exe',
+      copy: () => copySync(join(path, 'ffmpeg-master-latest-win32-gpl', 'bin', 'ffmpeg.exe'), join(path, 'ffmpeg.exe')),
+    },
+    mac: {
+      url: 'https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip',
+      ffmpeg: 'ffmpeg',
+      copy: () => {},
+    },
+  };
+  // only download ffmpeg if not available
+  if (!existsSync(join(path, manifest[platform].ffmpeg))) {
+    get(manifest[platform].url, (resp) => {
+      const zip = join(path, 'ffmpeg.zip');
+      const stream = createWriteStream(zip);
+      resp.pipe(stream);
+      stream.on('finish', async () => {
+        await extract(zip, { dir: path });
+        manifest[platform].copy();
+      });
+    });
+  }
+};
+
+const checkDependencies = async (counter) => {
   const handlePythonError = async (error) => {
     if (process.platform === 'darwin') {
       const pythonLocations = await Promise.all([
@@ -198,6 +248,12 @@ const checkDependencies = (counter) => {
       shell.openExternal('https://www.python.org/downloads/').then(() => app.quit());
     });
   };
+
+  try {
+    await getFFmpeg();
+  } catch (e) {
+    // ignore ffmpeg errors here -- the user will find out about this when fingerprinting/matching a non-wav file fails
+  }
 
   PythonShell.getVersion(pythonPath).then(({ stdout }) => {
     const code = getAudfprintScript(['--version']);
@@ -290,11 +346,6 @@ const match = async (dbName, dbFilename, precomputePaths) => {
     (p, line) => p.then(() => processMatchLine(line, dbName, precomputePaths)),
     Promise.resolve(),
   );
-};
-
-const copySync = (src, dest) => {
-  sendToMainWindow('pythonOutput', { line: `Copying ${src}...` });
-  cp.sync(src, dest);
 };
 
 const processNewDatabase = async (filename, precomputePaths) => {

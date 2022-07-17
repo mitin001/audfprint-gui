@@ -37,15 +37,11 @@
     "start": "react-scripts start",
     "prebuild": "rm -rf public/audfprint/__pycache__",
     "build": "react-scripts build && cp -r electron build/electron",
-    "build-linux": "npm run prebuild && cp -r electron build/electron && rm build/audfprint/ffmpeg* && cp ffmpeg/linux/ffmpeg build/audfprint",
-    "build-win32": "npm run prebuild && cp -r electron build/electron && rm build/audfprint/ffmpeg* && cp ffmpeg/win32/ffmpeg.exe build/audfprint",
-    "build-win": "npm run prebuild && cp -r electron build/electron && rm build/audfprint/ffmpeg* && cp ffmpeg/win/ffmpeg.exe build/audfprint",
-    "build-mac": "npm run prebuild && cp -r electron build/electron && rm build/audfprint/ffmpeg* && cp ffmpeg/mac/ffmpeg build/audfprint",
+    "build-platform": "npm run prebuild && cp -r electron build/electron",
     "start-electron": "electron .",
-    "package-electron-linux": "npm run build-mac && electron-builder build --linux -c.extraMetadata.main=build/electron/main.js --publish always",
-    "package-electron-mac": "npm run build-mac && electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
-    "package-electron-win": "npm run build-win && electron-builder build --win --x64 -c.extraMetadata.main=build/electron/main.js --publish always",
-    "package-electron-win32": "npm run build-win32 && electron-builder build --win --ia32 -c.extraMetadata.main=build/electron/main.js --publish always"
+    "package-electron-linux": "npm run build-platform && electron-builder build --linux -c.extraMetadata.main=build/electron/main.js --publish always",
+    "package-electron-mac": "npm run build-platform && electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
+    "package-electron-win": "npm run build-platform && electron-builder build --win --x64 --ia32 -c.extraMetadata.main=build/electron/main.js --publish always"
   },
   "main": "electron/main.js",
   "build": {
