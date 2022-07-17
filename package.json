@@ -50,6 +50,7 @@
   "main": "electron/main.js",
   "build": {
     "appId": "github.com/mitin001/audfprint-gui",
+    "artifactName": "${name}-${version}.${ext}",
     "directories": {
       "buildResources": "assets"
     },
@@ -61,10 +62,10 @@
       "icon": "build/icon.png"
     },
     "nsis": {
-      "artifactName": "${productName}.setup.${version}.${ext}",
+      "artifactName": "${name}.setup.${version}.${ext}",
       "uninstallDisplayName": "audfprint-gui"
     },
-    "productName": "audfprint-gui",
+    "productName": "Audio Fingerprinter",
     "publish": {
       "owner": "mitin001",
       "provider": "github",
