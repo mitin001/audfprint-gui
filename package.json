@@ -37,7 +37,7 @@
     "start": "react-scripts start",
     "prebuild": "rm -rf public/audfprint/__pycache__ && rm -rf build/audfprint/__pycache__",
     "build": "react-scripts build && cp -r electron build/electron",
-    "build-platform": "npm run prebuild && rm -rf build/audfprint/ffmpeg* && cp -r electron build/electron",
+    "build-platform": "npm run prebuild && rm -rf build/audfprint/ffmpeg* && npm run build",
     "start-electron": "electron .",
     "package-electron-linux": "npm run build-platform && electron-builder build --linux -c.extraMetadata.main=build/electron/main.js --publish always",
     "package-electron-mac": "npm run build-platform && electron-builder build --mac -c.extraMetadata.main=build/electron/main.js --publish always",
