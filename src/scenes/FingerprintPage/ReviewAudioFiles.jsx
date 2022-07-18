@@ -130,11 +130,12 @@ export default function ReviewAudioFiles() {
           Save fingerprint database
         </Button>
       </Box>
-      <ol>
+      <pre>
         {
-          filteredFilenames.map((filename) => <li key={filename}>{filename}</li>)
+          filteredFilenames.join('\n')
         }
-      </ol>
+      </pre>
+      <span>{`${filteredFilenames.length} files total`}</span>
     </Box>
   );
 }
