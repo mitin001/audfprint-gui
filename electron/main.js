@@ -174,7 +174,7 @@ const copySync = (src, dest) => {
   cp.sync(src, dest);
 };
 
-const getFFmpeg = async () => {
+const getFFmpeg = () => new Promise((resolve) => {
   let platform;
   if (process.platform === 'darwin') {
     platform = 'mac';
@@ -183,7 +183,7 @@ const getFFmpeg = async () => {
   } else if (process.arch === 'ia32') {
     platform = 'win32';
   } else {
-    return;
+    resolve();
   }
   const path = getAudfprintPath();
   const manifest = {
@@ -212,10 +212,13 @@ const getFFmpeg = async () => {
       stream.on('finish', async () => {
         await extract(zip, { dir: path });
         manifest[platform].copy();
+        resolve();
       });
     });
+  } else {
+    resolve();
   }
-};
+});
 
 const checkDependencies = async (counter) => {
   const handlePythonError = async (error) => {
@@ -232,7 +235,7 @@ const checkDependencies = async (counter) => {
     }
     if (pythonPath) {
       if (!counter) { // retry only once
-        checkDependencies(1);
+        await checkDependencies(1);
         return;
       }
     }
@@ -249,11 +252,13 @@ const checkDependencies = async (counter) => {
     });
   };
 
+  sendToMainWindow('installationStatusChanged', { installing: true });
   try {
     await getFFmpeg();
   } catch (e) {
     // ignore ffmpeg errors here -- the user will find out about this when fingerprinting/matching a non-wav file fails
   }
+  sendToMainWindow('installationStatusChanged', { installing: false });
 
   PythonShell.getVersion(pythonPath).then(({ stdout }) => {
     const code = getAudfprintScript(['--version']);
