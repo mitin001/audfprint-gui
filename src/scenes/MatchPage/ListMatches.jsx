@@ -8,28 +8,30 @@ import MatchCard from './MatchCard';
 import theme from '../../theme';
 
 export default function ListMatches(props) {
-  const { filename, name, matchData } = props || {};
-  const { error, parsedMatchesByDatabase } = matchData || {};
+  const { filename, matchData } = props || {};
+  const { error, parsedMatches = [] } = matchData || {};
   const [orderBy, setOrderBy] = useState();
   const [desc, setDesc] = useState(false);
-  const compare = (a, b) => {
-    const left = parsedMatchesByDatabase[a] || {};
-    const right = parsedMatchesByDatabase[b] || {};
-    return (desc ? (-1) : 1) * (left[orderBy] - right[orderBy]);
-  };
+  const compare = (a, b) => (desc ? (-1) : 1) * (a[orderBy] - b[orderBy]);
 
   return (
     <Box>
-      <Button
-        sx={{ mb: 2 }}
-        theme={theme}
-        variant="contained"
-        startIcon={<CgExport size={25} />}
-        onKeyPress={() => window.ipc.send('export', { object: 'analyses', filename })}
-        onClick={() => window.ipc.send('export', { object: 'analyses', filename })}
-      >
-        Export analysis
-      </Button>
+      {
+        filename
+          ? (
+            <Button
+              sx={{ mb: 2 }}
+              theme={theme}
+              variant="contained"
+              startIcon={<CgExport size={25} />}
+              onKeyPress={() => window.ipc.send('export', { object: 'analyses', filename })}
+              onClick={() => window.ipc.send('export', { object: 'analyses', filename })}
+            >
+              Export analysis
+            </Button>
+          )
+          : null
+      }
       <FormControl sx={{ mb: 2, ml: 2, minWidth: 200 }} size="small">
         <InputLabel id="order-by-label">Order by</InputLabel>
         <Select
@@ -56,12 +58,12 @@ export default function ListMatches(props) {
       </IconButton>
       <pre>{error || ''}</pre>
       {
-        Object.keys(parsedMatchesByDatabase).sort(compare).map((database) => (
+        parsedMatches.sort(compare).map((match) => (
           <MatchCard
-            key={database}
-            name={name}
-            database={database}
-            match={parsedMatchesByDatabase[database]}
+            key={match.name + match.database}
+            name={match.name}
+            database={match.database}
+            match={match}
           />
         ))
       }

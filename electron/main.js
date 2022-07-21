@@ -551,15 +551,24 @@ ipcMain.on('listDatabase', async (event, { filename }) => {
 
 ipcMain.on('listMatches', async (event, { filename }) => {
   let contents;
+  const name = basename(filename, '.afpt');
   try {
     contents = await readFile(filename.replace(/\.afpt$/, '.json'), 'utf-8');
   } catch (listError) {
     sendToMainWindow('matchesListed', { error: listError.toString() });
   }
   try {
+    const parsedMatches = [];
     const analysis = JSON.parse(contents.toString());
     const { parsedMatchesByDatabase } = analysis || {};
-    sendToMainWindow('matchesListed', { parsedMatchesByDatabase });
+    Object.keys(parsedMatchesByDatabase).forEach((database) => {
+      parsedMatches.push({
+        ...parsedMatchesByDatabase[database],
+        database,
+        name,
+      });
+    });
+    sendToMainWindow('matchesListed', { parsedMatches });
   } catch (parseError) {
     sendToMainWindow('matchesListed', { error: parseError.toString() });
   }
@@ -629,6 +638,29 @@ ipcMain.on('import', async (event, { object }) => {
     Promise.resolve(),
   );
   await manifest.callback(newFiles);
+});
+
+ipcMain.on('search', async () => {
+  const files = await listFiles(getPrecomputePath(), '.json');
+  const parsedMatches = [];
+  await Promise.all(files.map(async ({ fullname: filename }) => {
+    const contents = await readFile(filename, 'utf-8');
+    const name = basename(filename, '.afpt');
+    try {
+      const analysis = JSON.parse(contents.toString());
+      const { parsedMatchesByDatabase } = analysis || {};
+      Object.keys(parsedMatchesByDatabase).forEach((database) => {
+        parsedMatches.push({
+          ...parsedMatchesByDatabase[database],
+          database,
+          name,
+        });
+      });
+    } catch (parseError) {
+      // ignore parse error
+    }
+  }));
+  sendToMainWindow('matchesListed', { parsedMatches });
 });
 
 ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {

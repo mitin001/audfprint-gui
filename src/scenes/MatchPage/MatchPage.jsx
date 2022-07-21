@@ -14,7 +14,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Button } from '@mui/material';
 import { IoMdAddCircle } from 'react-icons/io';
-import { HiOutlineArrowCircleDown, HiOutlineArrowCircleUp } from 'react-icons/hi';
+import { HiOutlineArrowCircleDown, HiOutlineArrowCircleUp, HiOutlineSearch } from 'react-icons/hi';
 import { FaFileAudio } from 'react-icons/fa';
 import ReactTooltip from 'react-tooltip';
 import PythonOutput from '../FingerprintPage/PythonOutput';
@@ -29,7 +29,13 @@ export default function AppContent() {
   const [precomputeList, setPrecomputeList] = useState([]);
   const [selectedAnalysis, selectAnalysis] = useState({});
   const [matchData, setMatchData] = useState({ parsedMatchesByDatabase: [] });
-  const { basename: selectedAnalysisName, fullname: selectedAnalysisFullname } = selectedAnalysis || {};
+  const { basename: selectedAnalysisName, fullname: selectedAnalysisFullname, mode } = selectedAnalysis || {};
+  let title = 'New Analysis';
+  if (selectedAnalysisName) {
+    title = selectedAnalysisName;
+  } else if (mode === 'search') {
+    title = 'Search';
+  }
 
   useEffect(() => {
     window.ipc.send('listPrecompute');
@@ -38,8 +44,7 @@ export default function AppContent() {
       setPrecomputeList(files);
     });
     window.ipc.on('matchesListed', (event, data) => {
-      const { error: incomingError, parsedMatchesByDatabase: incomingParsedMatchesByDatabase = [] } = data || {};
-      setMatchData({ error: incomingError, parsedMatchesByDatabase: incomingParsedMatchesByDatabase });
+      setMatchData(data || {}); // { error, parsedMatches = [] }
     });
     return () => {
       window.ipc.removeAllListeners('precomputeListed');
@@ -69,9 +74,7 @@ export default function AppContent() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            {selectedAnalysisName || 'New Analysis'}
-          </Typography>
+          <Typography variant="h6" noWrap component="div">{title}</Typography>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
@@ -161,13 +164,44 @@ export default function AppContent() {
               </ListItemButton>
             ) : null
           }
+          {
+            precomputeList.length ? (
+              <ListItemButton
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={() => {
+                  window.ipc.send('search');
+                  selectAnalysis({ mode: 'search' });
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <HiOutlineSearch
+                    data-delay-show="500"
+                    data-tip="Search"
+                    size={25}
+                  />
+                  <ReactTooltip />
+                </ListItemIcon>
+                <ListItemText primary="Search" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            ) : null
+          }
         </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
         {
-          selectedAnalysisName
-            ? <ListMatches filename={selectedAnalysisFullname} name={selectedAnalysisName} matchData={matchData} />
+          selectedAnalysisName || mode === 'search'
+            ? <ListMatches filename={selectedAnalysisFullname} matchData={matchData} />
             : (
               <Box>
                 <Button
