@@ -345,7 +345,7 @@ const processMatchLine = async (line, dbName, precomputePaths) => {
 };
 
 const match = async (dbName, dbFilename, precomputePaths) => {
-  const matchCode = getAudfprintScript(['match', '-d', dbFilename, ...precomputePaths, '-R']);
+  const matchCode = getAudfprintScript(['match', '-N', 2, '-d', dbFilename, ...precomputePaths, '-R']);
   const matchLines = await sendPythonOutput('Matching...', matchCode);
   matchLines.reduce(
     (p, line) => p.then(() => processMatchLine(line, dbName, precomputePaths)),
