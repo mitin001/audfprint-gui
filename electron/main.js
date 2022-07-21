@@ -698,13 +698,16 @@ ipcMain.on('export', async (event, { object, filename: requestedFilename }) => {
 
 ipcMain.on('openAudioFile', () => {
   dialog.showOpenDialog({
-    properties: ['openFile'],
+    properties: ['openFile', 'multiSelections'],
   }).then(async ({ filePaths }) => {
-    const [filename] = filePaths || [];
-    const precomputePath = await processNewAnalysis(filename);
+    const precomputePaths = [];
+    await filePaths.reduce(
+      (p, filename) => p.then(async () => precomputePaths.push(await processNewAnalysis(filename))),
+      Promise.resolve(),
+    );
     const dbFiles = await listFiles(getDatabasePath(), '.pklz');
     dbFiles.reduce(
-      (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, [precomputePath])),
+      (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, precomputePaths)),
       Promise.resolve(),
     );
     listFiles(getPrecomputePath(), '.afpt').then((files) => {
