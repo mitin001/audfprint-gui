@@ -362,7 +362,9 @@ const processNewDatabase = async (filename, precomputePaths) => {
     if (error) {
       file.write(error.toString());
     } else {
-      output.forEach((line) => {
+      const [, header, ...lines] = output || [];
+      file.write(`${header}\n`);
+      lines.sort().forEach((line) => {
         file.write(`${line}\n`);
       });
     }
