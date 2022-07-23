@@ -12,7 +12,19 @@ export default function ListMatches(props) {
   const { error, parsedMatches = [] } = matchData || {};
   const [orderBy, setOrderBy] = useState();
   const [desc, setDesc] = useState(false);
-  const compare = (a, b) => (desc ? (-1) : 1) * (a[orderBy] - b[orderBy]);
+  const compare = (a, b) => {
+    if (typeof a[orderBy] === 'number') {
+      return (desc ? -1 : 1) * (a[orderBy] - b[orderBy]);
+    }
+    if (typeof a[orderBy] === 'string') {
+      const [strA, strB] = [a[orderBy].toUpperCase(), b[orderBy].toUpperCase()];
+      if (strA < strB) {
+        return desc ? 1 : -1;
+      }
+      return desc ? -1 : 1;
+    }
+    return 1;
+  };
 
   return (
     <Box>
@@ -41,6 +53,13 @@ export default function ListMatches(props) {
           label="Order by"
           onChange={({ target: { value } }) => setOrderBy(value)}
         >
+          <MenuItem value="database">Database</MenuItem>
+          {
+            filename
+              ? null
+              : <MenuItem value="name">Analyzed audio filename</MenuItem>
+          }
+          <MenuItem value="matchFilename">Match filename</MenuItem>
           <MenuItem value="matchDuration">Match duration</MenuItem>
           <MenuItem value="matchStartInQuery">Match start in query</MenuItem>
           <MenuItem value="matchStartInFingerprint">Match start in fingerprint</MenuItem>
