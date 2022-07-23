@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box, Button, FormControl, IconButton, InputLabel,
   MenuItem, Select,
@@ -12,6 +12,7 @@ export default function ListDatabase(props) {
   const [newLine, setNewLine] = useState({});
   const [lines, setLines] = useState([]);
   const [incomingDbs, setIncomingDbs] = useState([]);
+  const bottomRef = useRef(null);
 
   useEffect(() => {
     window.ipc.on('pythonOutput', (event, line) => {
@@ -19,6 +20,13 @@ export default function ListDatabase(props) {
     });
     return () => window.ipc.removeAllListeners('pythonOutput');
   }, []);
+
+  useEffect(() => {
+    if (newLine) {
+      setLines([...lines, newLine]);
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [newLine]);
 
   // if the timestamp changes (the component is reloaded), clear out the old lines
   useEffect(() => {
@@ -85,6 +93,7 @@ export default function ListDatabase(props) {
           </pre>
         ))
       }
+      <div ref={bottomRef} style={{ width: 0 }} />
     </Box>
   );
 }
