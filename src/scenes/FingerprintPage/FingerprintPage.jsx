@@ -159,7 +159,13 @@ export default function FingerprintPage() {
         <DrawerHeader />
         {
           selectedDbFullname
-            ? <ListDatabase filename={selectedDbFullname} timestamp={new Date().valueOf()} />
+            ? (
+              <ListDatabase
+                databaseList={databaseList}
+                filename={selectedDbFullname}
+                timestamp={new Date().valueOf()}
+              />
+            )
             : (
               <Box>
                 <Button

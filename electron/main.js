@@ -769,6 +769,12 @@ ipcMain.on('storeDatabase', async (event, options) => {
   });
 });
 
+ipcMain.on('merge', async (event, { incomingDbs, filename }) => {
+  const code = getAudfprintScript(['merge', '-d', filename].concat(incomingDbs));
+  await sendPythonOutput('Merging...', code);
+  await processNewDatabase(filename, []);
+});
+
 ipcMain.on('checkDependencies', () => checkDependencies());
 
 autoUpdater.on('download-progress', (progress) => {
