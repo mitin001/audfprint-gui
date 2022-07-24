@@ -13,7 +13,7 @@ A few sample databases to import can be downloaded here: https://s3.amazonaws.co
 
 ## How to install
 
-Download the latest release from https://github.com/mitin001/audfprint-gui/releases.
+Download the latest release from https://github.com/mitin001/audfprint-gui/releases (.exe for Windows, .dmg for macOS).
 
 ### Windows
 
