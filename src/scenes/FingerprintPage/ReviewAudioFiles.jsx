@@ -24,7 +24,7 @@ export default function ReviewAudioFiles() {
   const filteredFilenames = filenames.map((filename) => (
     filename.replace(redaction, '')
   )).filter((filename) => (
-    trimmedFileTypes.some((fileType) => filename.indexOf(fileType) !== -1)
+    trimmedFileTypes.some((fileType) => filename.toUpperCase().indexOf(fileType.toUpperCase()) !== -1)
   ));
 
   function valueLabelFormat(selectedCores) {
