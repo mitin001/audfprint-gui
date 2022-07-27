@@ -9,15 +9,16 @@ import theme from '../../theme';
 
 export default function ReviewAudioFiles() {
   const [systemData, setSystemData] = useState({
-    root: '', filenames: [], maxCores: 1, platform: '',
+    root: '', filenames: [], maxCores: 1, platform: '', dbName: '',
   });
   const [fileTypes, setFileTypes] = useState(localStorage.getItem('fileTypes') || '.mp3,.wav,.flac,.m4a');
   const [cores, setCores] = useState(1);
   const [redaction, setRedaction] = useState('');
 
   const {
-    root = '', filenames = [], maxCores = 1, platform = '',
+    root = '', filenames = [], maxCores = 1, platform = '', dbName = '',
   } = systemData || {};
+  const [name, setName] = useState(dbName);
   const matcher = platform === 'win32' ? /\\/g : /\//g;
   const maxPathDepth = (root.match(matcher) || []).length + 1;
   const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
@@ -55,6 +56,12 @@ export default function ReviewAudioFiles() {
   return (
     <Box sx={{ mt: 3 }} theme={theme}>
       <Grid container spacing={0} alignItems="top">
+        <TextField
+          sx={{ mr: 1 }}
+          label="Name"
+          value={name || dbName}
+          onChange={({ target: { value } }) => setName(value)}
+        />
         <TextField
           label="File types"
           value={fileTypes}
@@ -118,12 +125,12 @@ export default function ReviewAudioFiles() {
           startIcon={<RiSave3Fill size={25} />}
           onKeyPress={() => (
             window.ipc.send('storeDatabase', {
-              root, cwd: redaction, filenames: filteredFilenames, cores,
+              cwd: redaction, filenames: filteredFilenames, cores, name: name || dbName,
             })
           )}
           onClick={() => (
             window.ipc.send('storeDatabase', {
-              root, cwd: redaction, filenames: filteredFilenames, cores,
+              cwd: redaction, filenames: filteredFilenames, cores, name: name || dbName,
             })
           )}
         >

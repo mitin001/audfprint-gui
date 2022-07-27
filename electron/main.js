@@ -522,6 +522,7 @@ ipcMain.on('openAudioDirectory', () => {
       const winFilenames = filenames.map((filename) => filename.replace(/\//g, '\\'));
       sendToMainWindow('audioDirectoryOpened', {
         root,
+        dbName: basename(root),
         filenames: process.platform === 'win32' ? winFilenames : filenames,
         maxCores: os.cpus().length,
         platform: process.platform,
@@ -752,10 +753,9 @@ ipcMain.on('openAudioFile', () => {
 
 ipcMain.on('storeDatabase', async (event, options) => {
   const {
-    root, cwd, filenames, cores,
+    cwd, filenames, cores, name,
   } = options || {};
-  const { base: defaultPath } = parse(root) || {};
-  const dbPath = join(getDatabasePath(), `${defaultPath}.pklz`);
+  const dbPath = join(getDatabasePath(), `${name}.pklz`);
   const precomputeFiles = await listFiles(getPrecomputePath(), '.afpt');
   const precomputePaths = precomputeFiles.map(({ fullname: precomputePath }) => precomputePath);
   let code;
