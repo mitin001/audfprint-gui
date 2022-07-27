@@ -187,7 +187,7 @@ export default function FingerprintPage() {
                 >
                   Import fingerprint databases
                 </Button>
-                <ReviewAudioFiles />
+                <ReviewAudioFiles databaseList={databaseList} />
                 <PythonOutput />
               </Box>
             )

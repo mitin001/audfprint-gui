@@ -7,7 +7,8 @@ import {
 } from '@mui/material';
 import theme from '../../theme';
 
-export default function ReviewAudioFiles() {
+export default function ReviewAudioFiles(props) {
+  const { databaseList = [] } = props || {};
   const [systemData, setSystemData] = useState({
     root: '', filenames: [], maxCores: 1, platform: '', dbName: '',
   });
@@ -15,12 +16,14 @@ export default function ReviewAudioFiles() {
   const [cores, setCores] = useState(1);
   const [redaction, setRedaction] = useState('');
 
+  const databaseNames = databaseList.map(({ basename }) => basename);
   const {
     root = '', filenames = [], maxCores = 1, platform = '', dbName = '',
   } = systemData || {};
   const [name, setName] = useState(dbName);
   const matcher = platform === 'win32' ? /\\/g : /\//g;
   const maxPathDepth = (root.match(matcher) || []).length + 1;
+  const nameTaken = databaseNames.indexOf(name || dbName) !== -1;
   const trimmedFileTypes = fileTypes.split(',').map((fileType) => fileType.trim());
   const filteredFilenames = filenames.map((filename) => (
     filename.replace(redaction, '')
@@ -59,7 +62,9 @@ export default function ReviewAudioFiles() {
         <TextField
           sx={{ mr: 1 }}
           label="Name"
+          error={nameTaken}
           value={name || dbName}
+          helperText={nameTaken ? 'Database name taken' : ''}
           onChange={({ target: { value } }) => setName(value)}
         />
         <TextField
@@ -122,6 +127,7 @@ export default function ReviewAudioFiles() {
         <Button
           theme={theme}
           variant="contained"
+          disabled={nameTaken}
           startIcon={<RiSave3Fill size={25} />}
           onKeyPress={() => (
             window.ipc.send('storeDatabase', {
