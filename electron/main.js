@@ -4,7 +4,7 @@ const {
   app, ipcMain, Menu, dialog, shell,
 } = require('electron');
 const { autoUpdater } = require('electron-updater');
-const { join, parse, basename } = require('path');
+const { join, basename } = require('path');
 const {
   promises: {
     readFile, writeFile, rm, rename, mkdir,
@@ -413,6 +413,9 @@ const processNewAnalysis = async (filename) => {
     }
   });
   const precomputeDir = getPrecomputePath();
+  if (!originalPrecomputePath) {
+    return;
+  }
   const precomputePath = join(precomputeDir, basename(originalPrecomputePath));
   if (!existsSync(precomputeDir)) {
     await mkdir(precomputeDir);
@@ -609,7 +612,9 @@ ipcMain.on('import', async (event, { object }) => {
           Promise.resolve(),
         );
         dbFiles.reduce(
-          (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, precomputePaths)),
+          (p, { fullname: dbPath, basename: dbName }) => p.then(() => (
+            match(dbName, dbPath, precomputePaths.filter((precomputePath) => precomputePath))
+          )),
           Promise.resolve(),
         );
         listFiles(getPrecomputePath(), '.afpt').then((mergedFiles) => {
@@ -742,7 +747,9 @@ ipcMain.on('openAudioFile', () => {
     );
     const dbFiles = await listFiles(getDatabasePath(), '.pklz');
     dbFiles.reduce(
-      (p, { fullname: dbPath, basename: dbName }) => p.then(() => match(dbName, dbPath, precomputePaths)),
+      (p, { fullname: dbPath, basename: dbName }) => p.then(() => (
+        match(dbName, dbPath, precomputePaths.filter((precomputePath) => precomputePath))
+      )),
       Promise.resolve(),
     );
     listFiles(getPrecomputePath(), '.afpt').then((files) => {
