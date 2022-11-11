@@ -20,6 +20,10 @@ export default function ListMatches(props) {
       return (desc ? -1 : 1) * (a[orderBy] - b[orderBy]);
     }
     if (typeof a[orderBy] === 'string') {
+      const [intA, intB] = [parseInt(a[orderBy], 10), parseInt(b[orderBy], 10)];
+      if (!Number.isNaN(intA) && !Number.isNaN(intB)) {
+        return (desc ? -1 : 1) * (intA - intB);
+      }
       const [strA, strB] = [a[orderBy].toUpperCase(), b[orderBy].toUpperCase()];
       if (strA < strB) {
         return desc ? 1 : -1;
